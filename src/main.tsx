@@ -4,8 +4,6 @@ import { App } from "./app.tsx";
 
 const ROOT_ELEMENT_ID = "root";
 
-const ROOT_ELEMENT_ID = "root";
-
 const rootEl = document && document.getElementById(ROOT_ELEMENT_ID);
 
 if (rootEl) {
