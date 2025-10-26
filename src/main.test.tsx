@@ -13,9 +13,8 @@ vi.mock("./app", () => ({
 
 describe("main.tsx", () => {
   afterEach(() => {
-    const originalGetElementById = document.getElementById;
-
-    document.getElementById = originalGetElementById;
+    vi.clearAllMocks();
+    document.body.innerHTML = '';
   });
 
   it("should call createRoot with the root element", async () => {
