@@ -161,49 +161,6 @@ Which build tool, package manager, and supporting libraries should be used?
 
 ## Implementation Notes
 
-### Package Versions
-
-Use latest compatible versions:
-
-```json
-{
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@reduxjs/toolkit": "^2.5.0",
-    "react-redux": "^9.2.0",
-    "@effect/schema": "^0.77.0",
-    "effect": "^3.12.0"
-  },
-  "devDependencies": {
-    "vite": "^6.0.0",
-    "typescript": "^5.7.0",
-    "vitest": "^4.0.0",
-    "@vitejs/plugin-react": "^4.3.0"
-  }
-}
-```
-
-### Vite Configuration
-
-Enable React Compiler:
-
-```typescript
-// vite.config.ts
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-
-export default defineConfig({
-  plugins: [
-    react({
-      babel: {
-        plugins: [["babel-plugin-react-compiler", {}]],
-      },
-    }),
-  ],
-});
-```
-
 ### Alternative if React 19 Issues Arise
 
 If environment doesn't support React 19:
