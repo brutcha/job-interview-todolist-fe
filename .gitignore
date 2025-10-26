@@ -10,3 +10,10 @@ pnpm-lock.yaml
 
 # Logs
 *.log
+
+# Test coverage
+coverage/
+
+# Environment variables
+.env.local
+.env*.local

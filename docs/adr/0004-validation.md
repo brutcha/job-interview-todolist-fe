@@ -102,63 +102,6 @@ RTK Query's `transformResponse` is the perfect place:
 
 ## Implementation Approach
 
-### Schema Definition
-
-```typescript
-// schemas/todo-schema.ts
-import { Schema } from "@effect/schema";
-
-export const TodoSchema = Schema.Struct({
-  id: Schema.String.pipe(Schema.minLength(21)),
-  text: Schema.String,
-  completed: Schema.Boolean,
-  createdDate: Schema.Number,
-  completedDate: Schema.Number.pipe(Schema.optional),
-});
-
-export const TodosSchema = Schema.Array(TodoSchema);
-
-// Type inference - no separate type definition needed!
-export type Todo = Schema.Schema.Type<typeof TodoSchema>;
-```
-
-### RTK Query Integration
-
-**Pattern:**
-
-```typescript
-// api/todos-api.ts
-import { Schema } from "@effect/schema";
-
-export const todosApi = createApi({
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_BASE_URL,
-  }),
-  endpoints: (build) => ({
-    getTodos: build.query<Todo[], void>({
-      query: () => "/tasks",
-
-      // Validate response before caching
-      transformResponse: (response: unknown) => {
-        try {
-          return Schema.decodeUnknownSync(TodosSchema)(response);
-        } catch (error) {
-          console.error("Validation error:", error);
-          throw error; // RTK Query catches and sets error state
-        }
-      },
-    }),
-
-    createTodo: build.mutation<Todo, { text: string }>({
-      query: (body) => ({ url: "/tasks", method: "POST", body }),
-      transformResponse: (response: unknown) => {
-        return Schema.decodeUnknownSync(TodoSchema)(response);
-      },
-    }),
-  }),
-});
-```
-
 ### Error Handling
 
 **Components receive validated data or error:**
