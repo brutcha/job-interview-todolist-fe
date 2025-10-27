@@ -1,13 +1,19 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
+
+import { type TaskID } from "@/schemas/api";
 
 type Filter = "all" | "active" | "completed";
 
 interface UserState {
   filter: Filter;
+  editingTaskID: TaskID | null;
+  editingTaskText: string | null;
 }
 
-const initialState: UserState = {
+export const initialState: UserState = {
   filter: "all",
+  editingTaskID: null,
+  editingTaskText: null,
 };
 
 export const userStateSlice = createSlice({
@@ -16,6 +22,17 @@ export const userStateSlice = createSlice({
   reducers: {
     setFilter(state, { payload }: PayloadAction<Filter>) {
       state.filter = payload;
+    },
+    editTask(
+      state,
+      { payload }: PayloadAction<{ taskID: TaskID; taskText: string }>,
+    ) {
+      state.editingTaskID = payload.taskID;
+      state.editingTaskText = payload.taskText;
+    },
+    clearEditingTask(state) {
+      state.editingTaskID = null;
+      state.editingTaskText = null;
     },
   },
 });

@@ -1,15 +1,27 @@
 import { Schema } from "effect";
 
-const TextSchema = Schema.String.pipe(Schema.minLength(1));
+export const TaskIDSchema = Schema.String.pipe(
+  Schema.minLength(21),
+  Schema.brand("TaskID"),
+);
+export type TaskID = typeof TaskIDSchema.Type;
+
+export const TaskTextSchema = Schema.String.pipe(Schema.minLength(1));
+export type TaskText = typeof TaskTextSchema.Type;
 
 export const TaskSchema = Schema.Struct({
-  id: Schema.String.pipe(Schema.length(21), Schema.brand("TaskID")),
-  text: TextSchema,
+  id: TaskIDSchema,
+  text: TaskTextSchema,
   completed: Schema.Boolean,
-  createdDate: Schema.DateFromNumber,
-  completedDate: Schema.DateFromNumber.pipe(Schema.optional),
+  createdDate: Schema.Int,
+  completedDate: Schema.Int.pipe(Schema.optional),
 });
 export type Task = typeof TaskSchema.Type;
 
 export const GetTasksResponseSchema = Schema.Array(TaskSchema);
 export type GetTasksResponse = typeof GetTasksResponseSchema.Type;
+
+export const UpdateTaskRequestSchema = Schema.Struct({
+  text: TaskTextSchema,
+});
+export type UpdateTaskRequest = typeof UpdateTaskRequestSchema.Encoded;

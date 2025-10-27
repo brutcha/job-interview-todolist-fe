@@ -1,6 +1,8 @@
-import { todoApi } from "@/api/todo-api";
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query/react";
+
+import { todoApi } from "@/api/todo-api";
+
 import { userStateSlice } from "./user-state-slice";
 
 export const store = configureStore({
@@ -14,3 +16,6 @@ export const store = configureStore({
 });
 
 setupListeners(store.dispatch);
+
+export type State = ReturnType<typeof store.getState>;
+export type Dispatch = ReturnType<typeof store.dispatch>;
