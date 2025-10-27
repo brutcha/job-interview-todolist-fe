@@ -30,25 +30,20 @@ export const useDebouncedCallback = <TArgs extends unknown[], TResult>(
 
   const debouncedCallback = useCallback(
     async (...args: TArgs): Promise<TResult> => {
-      // Start loading state and timing
       loadingStartTimeRef.current = Date.now();
       setIsLoading(true);
 
-      // Clear any existing timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
       try {
-        // Execute immediately (non-blocking)
         const result = await callback(...args);
 
-        // Calculate remaining time to maintain loading state
         const elapsed = Date.now() - (loadingStartTimeRef.current || 0);
         const remaining = Math.max(0, minLoadingTime - elapsed);
 
         if (remaining > 0) {
-          // Keep loading state for minimum time
           await new Promise<void>((resolve) => {
             timeoutRef.current = setTimeout(() => {
               setIsLoading(false);
@@ -61,7 +56,6 @@ export const useDebouncedCallback = <TArgs extends unknown[], TResult>(
 
         return result;
       } catch (error) {
-        // On error, still respect minimum loading time
         const elapsed = Date.now() - (loadingStartTimeRef.current || 0);
         const remaining = Math.max(0, minLoadingTime - elapsed);
 
@@ -82,7 +76,6 @@ export const useDebouncedCallback = <TArgs extends unknown[], TResult>(
     [callback, minLoadingTime],
   );
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {

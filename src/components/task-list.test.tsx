@@ -3,14 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskList } from "./task-list";
 
-// Mock the todoApi
 vi.mock("@/api/todo-api", () => ({
   todoApi: {
     useGetTasksQuery: vi.fn(),
   },
 }));
 
-// Mock the UI components
 vi.mock("@/components/ui/alert", () => ({
   Alert: ({
     children,
@@ -110,7 +108,7 @@ describe("TaskList", () => {
 
     render(<TaskList />);
 
-    expect(screen.getAllByTestId("skeleton-task")).length.gte(1);
+    expect(screen.getAllByTestId("skeleton-task").length).toBeGreaterThan(0);
   });
 
   it("should render tasks when data is available", async () => {

@@ -35,8 +35,7 @@ describe("handleTaskUpdate", () => {
     const mockUpdateQueryData = vi.fn(() => ({
       type: "api/util/updateQueryData",
     }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (todoApi.util as any) = {
+    (todoApi.util as unknown) = {
       updateQueryData: mockUpdateQueryData,
     };
 
@@ -66,8 +65,7 @@ describe("handleTaskUpdate", () => {
     const mockUpdateQueryData = vi.fn(() => ({
       type: "api/util/updateQueryData",
     }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (todoApi.util as any) = {
+    (todoApi.util as unknown) = {
       updateQueryData: mockUpdateQueryData,
     };
 
@@ -100,8 +98,7 @@ describe("handleTaskUpdate", () => {
     const mockUpdateQueryData = vi.fn(() => ({
       type: "api/util/updateQueryData",
     }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (todoApi.util as any) = {
+    (todoApi.util as unknown) = {
       updateQueryData: mockUpdateQueryData,
     };
 
@@ -119,8 +116,7 @@ describe("handleTaskUpdate", () => {
     const queryFulfilled = Promise.reject(new Error("API Error"));
 
     const mockUpdateQueryData = vi.fn();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (todoApi.util as any) = {
+    (todoApi.util as unknown) = {
       updateQueryData: mockUpdateQueryData,
     };
 
@@ -143,8 +139,7 @@ describe("handleTaskDelete", () => {
     const mockUpdateQueryData = vi.fn(() => ({
       type: "api/util/updateQueryData",
     }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (todoApi.util as any) = {
+    (todoApi.util as unknown) = {
       updateQueryData: mockUpdateQueryData,
     };
 
@@ -165,8 +160,7 @@ describe("handleTaskDelete", () => {
     const queryFulfilled = Promise.reject(new Error("API Error"));
 
     const mockUpdateQueryData = vi.fn();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (todoApi.util as any) = {
+    (todoApi.util as unknown) = {
       updateQueryData: mockUpdateQueryData,
     };
 

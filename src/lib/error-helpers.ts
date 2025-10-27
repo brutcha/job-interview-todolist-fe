@@ -8,12 +8,10 @@ export type ApiError = FetchBaseQueryError | SerializedError;
  */
 export const isRetryableError = (error: ApiError): boolean => {
   if ("status" in error) {
-    // Network errors
     if (error.status === "FETCH_ERROR" || error.status === "TIMEOUT_ERROR") {
       return true;
     }
 
-    // Server errors (5xx)
     if (typeof error.status === "number" && error.status >= 500) {
       return true;
     }
@@ -27,7 +25,6 @@ export const isRetryableError = (error: ApiError): boolean => {
  */
 export const getErrorMessage = (error: ApiError): string => {
   if ("status" in error) {
-    // Check for custom error message in data first
     if (
       "data" in error &&
       typeof error.data === "object" &&

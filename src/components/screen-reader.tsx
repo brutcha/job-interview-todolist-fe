@@ -8,7 +8,7 @@ export const ScreenReader = ({
   Omit<ComponentProps<"div">, "className" | "aria-hidden">
 >) => {
   return (
-    <div {...props} className="hidden" aria-live={ariaLive}>
+    <div {...props} className="sr-only" aria-live={ariaLive}>
       {children}
     </div>
   );

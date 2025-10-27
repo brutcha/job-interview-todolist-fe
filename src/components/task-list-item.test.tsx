@@ -42,7 +42,6 @@ describe("TaskListItem", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset the store to initial state
     store.dispatch(userStateSlice.actions.clearEditingTask());
   });
 
@@ -228,18 +227,15 @@ describe("TaskListItem", () => {
     const editButton = screen.getByLabelText("Edit Task");
     await user.click(editButton);
 
-    // Verify editing mode UI appears
     expect(screen.getByRole("textbox")).toBeDefined();
     expect(screen.getByLabelText("Update Task")).toBeDefined();
 
-    // Verify normal mode UI disappears
     expect(screen.queryByLabelText("Edit Task")).toBeNull();
     expect(screen.queryByLabelText("Delete Task")).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
   });
 
   it("should render editing mode UI elements correctly", () => {
-    // Mock Redux state to simulate editing mode
     const mockStore = {
       ...store,
       getState: () => ({
@@ -258,17 +254,14 @@ describe("TaskListItem", () => {
       </Provider>,
     );
 
-    // Verify editing mode UI elements
     const input = screen.getByRole("textbox");
     expect(input).toBeDefined();
     expect((input as HTMLInputElement).value).toBe("Test Task");
 
-    // Check for SquarePenIcon (using data-testid or checking the icon is rendered)
     const inputGroup =
       input.closest('[data-slot="input-group"]') || input.parentElement;
     expect(inputGroup).toBeDefined();
 
-    // Verify submit button
     const submitButton = screen.getByLabelText("Update Task");
     expect(submitButton).toBeDefined();
   });
@@ -277,7 +270,6 @@ describe("TaskListItem", () => {
     const user = userEvent.setup();
     const mockDispatch = vi.fn();
 
-    // Mock Redux state to simulate editing mode
     const mockStore = {
       ...store,
       getState: () => ({
@@ -299,7 +291,6 @@ describe("TaskListItem", () => {
     const input = screen.getByRole("textbox");
     await user.type(input, " Updated");
 
-    // Verify dispatch was called (indicating input change handler works)
     expect(mockDispatch).toHaveBeenCalled();
     expect(
       mockDispatch.mock.calls.some(
@@ -321,7 +312,6 @@ describe("TaskListItem", () => {
       { isLoading: false },
     ] as never);
 
-    // Mock Redux state to simulate editing mode
     const mockStore = {
       ...store,
       getState: () => ({
@@ -341,8 +331,8 @@ describe("TaskListItem", () => {
     );
 
     const input = screen.getByRole("textbox");
-    await user.click(input); // Focus the input
-    await user.tab(); // Blur the input
+    await user.click(input);
+    await user.tab();
 
     await waitFor(() => {
       expect(mockUpdateTask).toHaveBeenCalledWith([
@@ -359,7 +349,6 @@ describe("TaskListItem", () => {
       unwrap: vi.fn().mockResolvedValue({}),
     });
 
-    // Reset all mocks before this test
     vi.clearAllMocks();
 
     vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
@@ -367,14 +356,13 @@ describe("TaskListItem", () => {
       { isLoading: false },
     ] as never);
 
-    // Mock Redux state to simulate editing mode with same value as original
     const mockStore = {
       ...store,
       getState: () => ({
         ...store.getState(),
         userState: {
           editingTaskID: "test-id",
-          editingTaskText: "Test Task", // Same as original task text
+          editingTaskText: "Test Task",
         },
       }),
       dispatch: mockDispatch,
@@ -387,15 +375,13 @@ describe("TaskListItem", () => {
     );
 
     const input = screen.getByRole("textbox");
-    await user.click(input); // Focus the input
-    await user.tab(); // Blur the input
+    await user.click(input);
+    await user.tab();
 
-    // Verify clearEditingTask action is dispatched
     expect(mockDispatch).toHaveBeenCalledWith({
       type: "userState/clearEditingTask",
     });
 
-    // Verify no API call is made (updateTask should not be called)
     expect(mockUpdateTask).not.toHaveBeenCalled();
   });
 
@@ -410,7 +396,6 @@ describe("TaskListItem", () => {
       { isLoading: false },
     ] as never);
 
-    // Mock Redux state to simulate editing mode with changed value
     const mockStore = {
       ...store,
       getState: () => ({
@@ -441,7 +426,6 @@ describe("TaskListItem", () => {
   });
 
   it("should disable submit button during mutation", () => {
-    // Mock Redux state to simulate editing mode
     const mockStore = {
       ...store,
       getState: () => ({
@@ -454,7 +438,6 @@ describe("TaskListItem", () => {
       dispatch: vi.fn(),
     };
 
-    // Mock the mutation to return loading state
     vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
       vi.fn(),
       { isLoading: true },
@@ -475,12 +458,10 @@ describe("TaskListItem", () => {
     const user = userEvent.setup();
     const mockDispatch = vi.fn();
 
-    // Spy on the store dispatch
     const dispatchSpy = vi
       .spyOn(store, "dispatch")
       .mockImplementation(mockDispatch);
 
-    // Mock the mutation to not be loading
     vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
       vi.fn(),
       { isLoading: false },
@@ -495,7 +476,6 @@ describe("TaskListItem", () => {
     const editButton = screen.getByLabelText("Edit Task");
     await user.click(editButton);
 
-    // Verify that the editTask action was dispatched
     expect(mockDispatch).toHaveBeenCalledWith({
       type: "userState/editTask",
       payload: {
@@ -504,28 +484,30 @@ describe("TaskListItem", () => {
       },
     });
 
-    // Restore the original dispatch
+    const input = await screen.findByRole("textbox");
+    await waitFor(() => {
+      expect(document.activeElement).toBe(input);
+    });
+
     dispatchSpy.mockRestore();
   });
 
   it("should persist editing mode during submission (isSubmiting)", () => {
-    // Mock Redux state with no editing task ID but simulate submission state
     const mockStore = {
       ...store,
       getState: () => ({
         ...store.getState(),
         userState: {
-          editingTaskID: null, // No editing task ID
+          editingTaskID: null,
           editingTaskText: "",
         },
       }),
       dispatch: vi.fn(),
     };
 
-    // Mock the mutation to return loading state (isSubmiting = true)
     vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
       vi.fn(),
-      { isLoading: true }, // This makes isSubmiting = true
+      { isLoading: true },
     ] as never);
 
     render(
@@ -534,12 +516,9 @@ describe("TaskListItem", () => {
       </Provider>,
     );
 
-    // Verify editing mode UI is displayed even without editingTaskID
-    // because isSubmiting is true
     expect(screen.getByRole("textbox")).toBeDefined();
     expect(screen.getByLabelText("Update Task")).toBeDefined();
 
-    // Verify normal mode UI is hidden
     expect(screen.queryByLabelText("Edit Task")).toBeNull();
     expect(screen.queryByLabelText("Delete Task")).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
@@ -549,7 +528,6 @@ describe("TaskListItem", () => {
     const user = userEvent.setup();
     const mockedToast = vi.mocked(toast);
 
-    // Mock mutations to reject
     const mockCompleteTask = vi.fn().mockReturnValue({
       unwrap: vi.fn().mockRejectedValue(new Error("test")),
     });
@@ -583,7 +561,6 @@ describe("TaskListItem", () => {
       </Provider>,
     );
 
-    // Test onCheckedChange error (line ~116-118 in task-list-item.tsx)
     const checkbox = screen.getByRole("checkbox");
     await user.click(checkbox);
 
@@ -592,7 +569,6 @@ describe("TaskListItem", () => {
       expect(mockedToast.success).not.toHaveBeenCalled();
     });
 
-    // Test onDelete error (line ~126-127 in task-list-item.tsx)
     const deleteButton = screen.getByLabelText("Delete Task");
     await user.click(deleteButton);
 
@@ -601,7 +577,6 @@ describe("TaskListItem", () => {
       expect(mockedToast.success).not.toHaveBeenCalled();
     });
 
-    // Test onUpdate error (line ~147-148 in task-list-item.tsx)
     const editButton = screen.getByLabelText("Edit Task");
     await user.click(editButton);
 
@@ -668,7 +643,6 @@ describe("SkeletonTaskListItem", () => {
   it("should render skeleton component", () => {
     render(<SkeletonTaskListItem />);
 
-    // Use querySelector since the element has aria-hidden
     const item = document.querySelector('[data-slot="item"]');
     expect(item).toBeDefined();
     expect(item?.querySelector('[data-slot="skeleton"]')).toBeDefined();

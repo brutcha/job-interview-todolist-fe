@@ -38,7 +38,6 @@ export const useDebouncedMutation = <
 ) => {
   const [originalTrigger, result] = useMutation();
 
-  // Wrap the mutation trigger with debounced callback
   const [debouncedTrigger, isDebouncing] = useDebouncedCallback(
     async (arg: TArgs) => {
       return await originalTrigger(arg).unwrap();
@@ -46,7 +45,6 @@ export const useDebouncedMutation = <
     options,
   );
 
-  // Combine RTK Query's loading state with debounced loading state
   const isLoading = result.isLoading || isDebouncing;
 
   return [debouncedTrigger, { ...result, isLoading }] as const;

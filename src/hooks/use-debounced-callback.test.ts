@@ -130,11 +130,7 @@ describe("useDebouncedCallback", () => {
     );
 
     await act(async () => {
-      try {
         await result.current[0]("arg1");
-      } catch {
-        // Expected to fail
-      }
     });
 
     await waitFor(() => {
@@ -142,11 +138,7 @@ describe("useDebouncedCallback", () => {
     });
 
     await act(async () => {
-      try {
         await result.current[0]("arg2");
-      } catch {
-        // Expected to fail
-      }
     });
 
     await waitFor(() => {
