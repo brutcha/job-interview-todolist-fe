@@ -1,22 +1,19 @@
 import { useDebouncedCallback } from "./use-debounced-callback";
-
-type MutationResult = {
-  isLoading: boolean;
-  data?: unknown;
-  error?: unknown;
-  isSuccess: boolean;
-  isError: boolean;
-};
+import type { MutationDefinition, BaseQueryFn, MutationResultSelectorResult } from "@reduxjs/toolkit/query";
 
 type UseMutationHook<
-  TArg,
-  TResult extends MutationResult = MutationResult,
-> = () => readonly [(arg: TArg) => Promise<unknown>, TResult];
+  TArgs,
+  TResult,
+  TError,
+  TMutation extends MutationDefinition<unknown, BaseQueryFn<TArgs, TResult, TError>, string, unknown>
+> = () => readonly [
+  (arg: TArgs) => { unwrap: () => Promise<TResult>},
+  MutationResultSelectorResult<TMutation>
+];
 
 interface UseDebouncedMutationOptions {
   minLoadingTime?: number;
 }
-
 /**
  * RTK Query mutation wrapper that prevents UI flicker on fast responses.
  *
@@ -29,19 +26,22 @@ interface UseDebouncedMutationOptions {
  *   { minLoadingTime: 250 }
  * );
  */
+
 export const useDebouncedMutation = <
-  TArg,
-  TResult extends MutationResult & Record<string, unknown>,
+  TArgs,
+  TResult,
+  TError,
+  TMutation extends MutationDefinition<unknown, BaseQueryFn<TArgs, TResult, TError>, string, unknown>
 >(
-  useMutation: UseMutationHook<TArg, TResult>,
+  useMutation: UseMutationHook<TArgs, TResult, TError, TMutation>,
   options: UseDebouncedMutationOptions = {},
 ) => {
   const [originalTrigger, result] = useMutation();
 
   // Wrap the mutation trigger with debounced callback
   const [debouncedTrigger, isDebouncing] = useDebouncedCallback(
-    async (arg: TArg) => {
-      return await originalTrigger(arg);
+    async (arg: TArgs) => {
+      return await originalTrigger(arg).unwrap();
     },
     options,
   );

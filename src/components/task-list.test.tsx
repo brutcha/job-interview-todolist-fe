@@ -160,7 +160,7 @@ describe("TaskList", () => {
 
     render(<TaskList />);
 
-    expect(screen.getByText("Unable to load Your tasks.")).toBeDefined();
+    expect(screen.getByText("Unable to load your tasks.")).toBeDefined();
     expect(screen.getByText("Try Again")).toBeDefined();
   });
 

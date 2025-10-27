@@ -31,10 +31,21 @@ describe("useDebouncedMutation", () => {
   });
 
   it("should allow rapid subsequent calls (non-blocking)", async () => {
-    const mockTrigger = vi.fn().mockResolvedValue("success");
-    const mockUseMutation = vi
-      .fn()
-      .mockReturnValue([mockTrigger, { isLoading: false }]);
+    const mockTrigger = vi.fn().mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue("success"),
+    });
+    const mockUseMutation = vi.fn().mockReturnValue([
+      mockTrigger,
+      {
+        isLoading: false,
+        data: undefined,
+        error: undefined,
+        isSuccess: false,
+        isError: false,
+        reset: vi.fn(),
+        originalArgs: undefined,
+      },
+    ]);
 
     const { result } = renderHook(() =>
       useDebouncedMutation(mockUseMutation, { minLoadingTime: 50 }),

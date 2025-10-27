@@ -14,11 +14,4 @@ describe("ScreenReader", () => {
     const element = screen.getByText("Test content");
     expect(element.getAttribute("aria-live")).toBe("polite");
   });
-
-  it("applies className and aria-hidden correctly", () => {
-    render(<ScreenReader>Test content</ScreenReader>);
-    const element = screen.getByText("Test content");
-    expect(element.className).toContain("hidden");
-    expect(element.getAttribute("aria-hidden")).toBe("false");
-  });
 });

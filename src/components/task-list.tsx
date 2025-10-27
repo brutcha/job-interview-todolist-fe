@@ -33,7 +33,7 @@ export const TaskList = () => {
     return (
       <Alert variant="destructive">
         <AlertCircleIcon aria-hidden />
-        <AlertTitle>Unable to load Your tasks.</AlertTitle>
+        <AlertTitle>Unable to load your tasks.</AlertTitle>
         <AlertDescription>
           <p>{errorMessage}</p>
           {isDev() && (

@@ -3,11 +3,13 @@ import { Provider } from "react-redux";
 import type { Store } from "@reduxjs/toolkit";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { todoApi } from "@/api/todo-api";
 import type { Task } from "@/schemas/api";
 import { store } from "@/store/store";
+import { userStateSlice } from "@/store/user-state-slice";
 
 import {
   EmptyTaskListItem,
@@ -15,10 +17,18 @@ import {
   TaskListItem,
 } from "./task-list-item";
 
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 vi.mock("@/hooks/use-debounced-mutation", () => ({
   useDebouncedMutation: vi.fn((mutationHook) => {
     const [trigger, result] = mutationHook();
-    return [trigger, result];
+    const wrappedTrigger = (...args: unknown[]) => trigger(...args).unwrap();
+    return [wrappedTrigger, result];
   }),
 }));
 
@@ -32,6 +42,8 @@ describe("TaskListItem", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset the store to initial state
+    store.dispatch(userStateSlice.actions.clearEditingTask());
   });
 
   it("should render task text", () => {
@@ -99,6 +111,33 @@ describe("TaskListItem", () => {
 
     const deleteButton = screen.getByLabelText("Delete Task");
     expect(deleteButton.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("should toggle task completion when clicking checkbox", async () => {
+    const user = userEvent.setup();
+    const mockCompleteTask = vi.fn().mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({}),
+    });
+
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      mockCompleteTask,
+      { isLoading: false },
+    ] as never);
+
+    render(
+      <Provider store={store}>
+        <TaskListItem task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    const checkbox = screen.getByRole("checkbox");
+    expect(checkbox.getAttribute("aria-checked")).toBe("false");
+
+    await user.click(checkbox);
+
+    await waitFor(() => {
+      expect(mockCompleteTask).toHaveBeenCalledWith("test-id");
+    });
   });
 
   it("should call completeTask when checking incomplete task", async () => {
@@ -436,18 +475,10 @@ describe("TaskListItem", () => {
     const user = userEvent.setup();
     const mockDispatch = vi.fn();
 
-    // Mock a clean store state without editing mode
-    const cleanStore = {
-      ...store,
-      getState: () => ({
-        ...store.getState(),
-        userState: {
-          editingTaskID: null,
-          editingTaskText: "",
-        },
-      }),
-      dispatch: mockDispatch,
-    };
+    // Spy on the store dispatch
+    const dispatchSpy = vi
+      .spyOn(store, "dispatch")
+      .mockImplementation(mockDispatch);
 
     // Mock the mutation to not be loading
     vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
@@ -456,7 +487,7 @@ describe("TaskListItem", () => {
     ] as never);
 
     render(
-      <Provider store={cleanStore as unknown as Store}>
+      <Provider store={store}>
         <TaskListItem task={mockTask} isFetching={false} />
       </Provider>,
     );
@@ -472,6 +503,9 @@ describe("TaskListItem", () => {
         taskText: "Test Task",
       },
     });
+
+    // Restore the original dispatch
+    dispatchSpy.mockRestore();
   });
 
   it("should persist editing mode during submission (isSubmiting)", () => {
@@ -509,6 +543,124 @@ describe("TaskListItem", () => {
     expect(screen.queryByLabelText("Edit Task")).toBeNull();
     expect(screen.queryByLabelText("Delete Task")).toBeNull();
     expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+
+  it("should show error toast and no success toast on mutation failures", async () => {
+    const user = userEvent.setup();
+    const mockedToast = vi.mocked(toast);
+
+    // Mock mutations to reject
+    const mockCompleteTask = vi.fn().mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue(new Error("test")),
+    });
+
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      mockCompleteTask,
+      { isLoading: false },
+    ] as never);
+
+    const mockDeleteTask = vi.fn().mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue(new Error("test")),
+    });
+
+    vi.spyOn(todoApi, "useDeleteTaskMutation").mockReturnValue([
+      mockDeleteTask,
+      { isLoading: false },
+    ] as never);
+
+    const mockUpdateTask = vi.fn().mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue(new Error("test")),
+    });
+
+    vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
+      mockUpdateTask,
+      { isLoading: false },
+    ] as never);
+
+    render(
+      <Provider store={store}>
+        <TaskListItem task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    // Test onCheckedChange error (line ~116-118 in task-list-item.tsx)
+    const checkbox = screen.getByRole("checkbox");
+    await user.click(checkbox);
+
+    await waitFor(() => {
+      expect(mockedToast.error).toHaveBeenCalledWith("Failed to update task");
+      expect(mockedToast.success).not.toHaveBeenCalled();
+    });
+
+    // Test onDelete error (line ~126-127 in task-list-item.tsx)
+    const deleteButton = screen.getByLabelText("Delete Task");
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(mockedToast.error).toHaveBeenCalledWith("Failed to delete task");
+      expect(mockedToast.success).not.toHaveBeenCalled();
+    });
+
+    // Test onUpdate error (line ~147-148 in task-list-item.tsx)
+    const editButton = screen.getByLabelText("Edit Task");
+    await user.click(editButton);
+
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "Updated");
+
+    const submitButton = screen.getByLabelText("Update Task");
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockedToast.error).toHaveBeenCalledWith("Failed to update task");
+      expect(mockedToast.success).not.toHaveBeenCalled();
+    });
+  });
+
+  it("should prevent double submission when blur and click occur", async () => {
+    const user = userEvent.setup();
+    const mockUpdateTask = vi.fn().mockReturnValue({
+      unwrap: vi
+        .fn()
+        .mockImplementation(
+          () => new Promise((resolve) => setTimeout(() => resolve({}), 100)),
+        ),
+    });
+
+    vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
+      mockUpdateTask,
+      { isLoading: false },
+    ] as never);
+
+    const mockStore = {
+      ...store,
+      getState: () => ({
+        ...store.getState(),
+        userState: {
+          editingTaskID: "test-id",
+          editingTaskText: "Updated Task",
+          filter: "all",
+        },
+      }),
+      dispatch: vi.fn(),
+    };
+
+    render(
+      <Provider store={mockStore as unknown as Store}>
+        <TaskListItem task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    const input = screen.getByRole("textbox");
+    const submitButton = screen.getByLabelText("Update Task");
+
+    await user.click(input);
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockUpdateTask).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

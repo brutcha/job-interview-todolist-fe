@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 
 import { todoApi } from "@/api/todo-api";
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useDebouncedMutation } from "@/hooks/use-debounced-mutation";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/schemas/api";
@@ -59,13 +60,36 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
   const [deleteTask, { isLoading: isDeleting }] = useDebouncedMutation(
     todoApi.useDeleteTaskMutation,
   );
-  const [updateTask, { isLoading: isSubmiting }] = useDebouncedMutation(
+  const [updateTask, { isLoading: isUpdating }] = useDebouncedMutation(
     todoApi.useUpdateTaskMutation,
   );
 
+  const [onSubmit, isDebouncedSubmiting] = useDebouncedCallback(
+    async () => {
+      if (inputValue === text) {
+        dispatch(userStateSlice.actions.clearEditingTask());
+        return;
+      }
+
+      try {
+        await updateTask([id, { text: inputValue ?? "" }]);
+        toast.success("Task updated");
+      } catch {
+        toast.error("Failed to update task");
+      }
+    },
+    { minLoadingTime: 50 },
+  );
+
+  const isSubmitting = isUpdating || isDebouncedSubmiting;
+
   const isBusy =
-    isFetching || isCompleting || isIncompleting || isDeleting || isSubmiting;
-  const isEditing = isSubmiting || editingTaskID === id;
+    isFetching ||
+    isCompleting ||
+    isIncompleting ||
+    isDeleting ||
+    isSubmitting;
+  const isEditing = isSubmitting || editingTaskID === id;
 
   const statusMessage = (() => {
     if (isDeleting) {
@@ -98,7 +122,7 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
   })();
 
   const SubmitIcon = (() => {
-    if (isSubmiting) {
+    if (isSubmitting) {
       return Spinner;
     }
     return SendHorizontalIcon;
@@ -114,7 +138,6 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
         toast.success("Task completed");
       }
     } catch {
-      // Error already shown via inline error state if needed
       toast.error("Failed to update task");
     }
   };
@@ -130,23 +153,9 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
 
   const onEditToggle = () => {
     dispatch(userStateSlice.actions.editTask({ taskID: id, taskText: text }));
-    queueMicrotask(() => {
+    requestAnimationFrame(() => {
       inputRef.current?.focus();
     });
-  };
-
-  const onSubmit = async () => {
-    if (inputValue === text) {
-      dispatch(userStateSlice.actions.clearEditingTask());
-      return;
-    }
-
-    try {
-      await updateTask([id, { text: inputValue ?? "" }]);
-      toast.success("Task updated");
-    } catch {
-      toast.error("Failed to update task");
-    }
   };
 
   const onInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -186,9 +195,7 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
               </Button>
             </ItemMedia>
             <ItemContent>
-              <ItemTitle>
-                <label htmlFor={id}>{text}</label>
-              </ItemTitle>
+              <ItemTitle>{text}</ItemTitle>
             </ItemContent>
             <ItemActions>
               <ButtonGroup>
