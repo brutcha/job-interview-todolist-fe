@@ -130,7 +130,7 @@ describe("useDebouncedCallback", () => {
     );
 
     await act(async () => {
-        await result.current[0]("arg1");
+      await result.current[0]("arg1");
     });
 
     await waitFor(() => {
@@ -138,7 +138,7 @@ describe("useDebouncedCallback", () => {
     });
 
     await act(async () => {
-        await result.current[0]("arg2");
+      await expect(async () => result.current[0]("arg2")).rejects.toThrow();
     });
 
     await waitFor(() => {

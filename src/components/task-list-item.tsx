@@ -26,7 +26,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 
 import { todoApi } from "@/api/todo-api";
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useDebouncedMutation } from "@/hooks/use-debounced-mutation";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/schemas/api";
@@ -60,35 +59,12 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
   const [deleteTask, { isLoading: isDeleting }] = useDebouncedMutation(
     todoApi.useDeleteTaskMutation,
   );
-  const [updateTask, { isLoading: isUpdating }] = useDebouncedMutation(
+  const [updateTask, { isLoading: isSubmitting }] = useDebouncedMutation(
     todoApi.useUpdateTaskMutation,
   );
 
-  const [onSubmit, isDebouncedSubmiting] = useDebouncedCallback(
-    async () => {
-      if (inputValue === text) {
-        dispatch(userStateSlice.actions.clearEditingTask());
-        return;
-      }
-
-      try {
-        await updateTask([id, { text: inputValue ?? "" }]);
-        toast.success("Task updated");
-      } catch {
-        toast.error("Failed to update task");
-      }
-    },
-    { minLoadingTime: 50 },
-  );
-
-  const isSubmitting = isUpdating || isDebouncedSubmiting;
-
   const isBusy =
-    isFetching ||
-    isCompleting ||
-    isIncompleting ||
-    isDeleting ||
-    isSubmitting;
+    isFetching || isCompleting || isIncompleting || isDeleting || isSubmitting;
   const isEditing = isSubmitting || editingTaskID === id;
 
   const statusMessage = (() => {
@@ -167,6 +143,28 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
     );
   };
 
+  const onSubmit = async () => {
+    if (inputValue === text) {
+      dispatch(userStateSlice.actions.clearEditingTask());
+      return;
+    }
+
+    try {
+      await updateTask([id, { text: inputValue ?? "" }]);
+      toast.success("Task updated");
+    } catch {
+      toast.error("Failed to update task");
+    }
+  };
+
+  const onInputBlur = async () => {
+    requestAnimationFrame(() => {
+      if (!isSubmitting) {
+        onSubmit();
+      }
+    });
+  };
+
   return (
     <>
       {/* Screen reader announcement for actions */}
@@ -232,9 +230,10 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
             <InputGroup className="group border-none shadow-none h-19">
               <InputGroupInput
                 ref={inputRef}
+                type="text"
                 value={inputValue ?? text}
                 onChange={onInputChange}
-                onBlur={onSubmit}
+                onBlur={onInputBlur}
                 className="font-medium border-none shadow-none -mt-0.5"
               />
               <InputGroupAddon aria-hidden>

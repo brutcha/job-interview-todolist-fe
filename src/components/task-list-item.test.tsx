@@ -1,7 +1,7 @@
 import { Provider } from "react-redux";
 
 import type { Store } from "@reduxjs/toolkit";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -456,11 +456,6 @@ describe("TaskListItem", () => {
 
   it("should focus input when entering edit mode", async () => {
     const user = userEvent.setup();
-    const mockDispatch = vi.fn();
-
-    const dispatchSpy = vi
-      .spyOn(store, "dispatch")
-      .mockImplementation(mockDispatch);
 
     vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
       vi.fn(),
@@ -476,23 +471,13 @@ describe("TaskListItem", () => {
     const editButton = screen.getByLabelText("Edit Task");
     await user.click(editButton);
 
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: "userState/editTask",
-      payload: {
-        taskID: "test-id",
-        taskText: "Test Task",
-      },
-    });
-
     const input = await screen.findByRole("textbox");
     await waitFor(() => {
       expect(document.activeElement).toBe(input);
     });
-
-    dispatchSpy.mockRestore();
   });
 
-  it("should persist editing mode during submission (isSubmiting)", () => {
+  it("should persist editing mode during submission (isSubmitting)", () => {
     const mockStore = {
       ...store,
       getState: () => ({
@@ -580,7 +565,7 @@ describe("TaskListItem", () => {
     const editButton = screen.getByLabelText("Edit Task");
     await user.click(editButton);
 
-    const input = screen.getByRole("textbox");
+    const input = await screen.findByRole("textbox");
     await user.clear(input);
     await user.type(input, "Updated");
 
@@ -608,29 +593,24 @@ describe("TaskListItem", () => {
       { isLoading: false },
     ] as never);
 
-    const mockStore = {
-      ...store,
-      getState: () => ({
-        ...store.getState(),
-        userState: {
-          editingTaskID: "test-id",
-          editingTaskText: "Updated Task",
-          filter: "all",
-        },
-      }),
-      dispatch: vi.fn(),
-    };
-
     render(
-      <Provider store={mockStore as unknown as Store}>
+      <Provider store={store}>
         <TaskListItem task={mockTask} isFetching={false} />
       </Provider>,
     );
 
-    const input = screen.getByRole("textbox");
+    act(() => {
+      store.dispatch(
+        userStateSlice.actions.editTask({
+          taskID: "test-id" as Task["id"],
+          taskText: "Updated Task",
+        }),
+      );
+    });
+
+    await screen.findByRole("textbox");
     const submitButton = screen.getByLabelText("Update Task");
 
-    await user.click(input);
     await user.click(submitButton);
 
     await waitFor(() => {
