@@ -1,10 +1,10 @@
 import { AlertCircleIcon, RefreshCwIcon } from "lucide-react";
 
-import {
-  EmptyTaskListItem,
-  SkeletonTaskListItem,
-  TaskListItem,
-} from "@/components/task-list-item";
+import { EmptyTaskCard } from "@/components/empty-task-card";
+import { NewTaskCard } from "@/components/new-task-card";
+import { ScreenReader } from "@/components/screen-reader";
+import { SkeletonTaskCard } from "@/components/skeleton-task-card";
+import { TaskCard } from "@/components/task-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ItemGroup } from "@/components/ui/item";
@@ -14,8 +14,6 @@ import { todoApi } from "@/api/todo-api";
 import { getErrorMessage, isRetryableError } from "@/lib/error-helpers";
 import { isDev } from "@/lib/is-dev";
 import { cn } from "@/lib/utils";
-
-import { ScreenReader } from "./screen-reader";
 
 export const TaskList = () => {
   const { data, error, isLoading, isFetching, refetch } =
@@ -61,7 +59,7 @@ export const TaskList = () => {
       <ItemGroup className="gap-2" aria-busy={isFetching}>
         {isLoading &&
           Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonTaskListItem
+            <SkeletonTaskCard
               key={`skeleton-${index}`}
               className={cn({
                 "opacity-75": index === 1,
@@ -71,9 +69,10 @@ export const TaskList = () => {
             />
           ))}
         {data?.map((task) => (
-          <TaskListItem key={task.id} task={task} isFetching={isFetching} />
+          <TaskCard key={task.id} task={task} isFetching={isFetching} />
         ))}
-        {data?.length === 0 && <EmptyTaskListItem />}
+        {data?.length === 0 && <EmptyTaskCard />}
+        <NewTaskCard />
       </ItemGroup>
     </>
   );

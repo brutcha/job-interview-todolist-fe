@@ -25,3 +25,6 @@ export const UpdateTaskRequestSchema = Schema.Struct({
   text: TaskTextSchema,
 });
 export type UpdateTaskRequest = typeof UpdateTaskRequestSchema.Encoded;
+
+export const CreateTaskRequestSchema = UpdateTaskRequestSchema;
+export type CreateTaskRequest = typeof CreateTaskRequestSchema.Type;

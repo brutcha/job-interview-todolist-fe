@@ -11,11 +11,9 @@ import type { Task } from "@/schemas/api";
 import { store } from "@/store/store";
 import { userStateSlice } from "@/store/user-state-slice";
 
-import {
-  EmptyTaskListItem,
-  SkeletonTaskListItem,
-  TaskListItem,
-} from "./task-list-item";
+import { EmptyTaskCard } from "./empty-task-card";
+import { SkeletonTaskCard } from "./skeleton-task-card";
+import { TaskCard } from "./task-card";
 
 vi.mock("sonner", () => ({
   toast: {
@@ -45,7 +43,7 @@ vi.mock("@/hooks/use-debounced-mutation", () => ({
   }),
 }));
 
-describe("TaskListItem", () => {
+describe("TaskCard", () => {
   const mockTask: Task = {
     id: "test-id" as Task["id"],
     text: "Test Task",
@@ -61,7 +59,7 @@ describe("TaskListItem", () => {
   it("should render task text", () => {
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -71,7 +69,7 @@ describe("TaskListItem", () => {
   it("should render unchecked checkbox for incomplete task", () => {
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -85,7 +83,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={completedTask} isFetching={false} />
+        <TaskCard task={completedTask} isFetching={false} />
       </Provider>,
     );
 
@@ -96,7 +94,7 @@ describe("TaskListItem", () => {
   it("should render delete button", () => {
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -106,7 +104,7 @@ describe("TaskListItem", () => {
   it("should disable checkbox when isFetching is true", () => {
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={true} />
+        <TaskCard task={mockTask} isFetching={true} />
       </Provider>,
     );
 
@@ -117,7 +115,7 @@ describe("TaskListItem", () => {
   it("should disable delete button when isFetching is true", () => {
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={true} />
+        <TaskCard task={mockTask} isFetching={true} />
       </Provider>,
     );
 
@@ -138,7 +136,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -165,7 +163,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -191,7 +189,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={completedTask} isFetching={false} />
+        <TaskCard task={completedTask} isFetching={false} />
       </Provider>,
     );
 
@@ -216,7 +214,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -233,7 +231,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -263,7 +261,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={mockStore as unknown as Store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -297,7 +295,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={mockStore as unknown as Store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -339,7 +337,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={mockStore as unknown as Store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -383,7 +381,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={mockStore as unknown as Store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -423,7 +421,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={mockStore as unknown as Store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -458,7 +456,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={mockStore as unknown as Store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -477,7 +475,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -510,7 +508,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={mockStore as unknown as Store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -555,7 +553,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -608,7 +606,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -649,7 +647,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -674,7 +672,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={mockTask} isFetching={false} />
+        <TaskCard task={mockTask} isFetching={false} />
       </Provider>,
     );
 
@@ -701,7 +699,7 @@ describe("TaskListItem", () => {
 
     render(
       <Provider store={store}>
-        <TaskListItem task={completedTask} isFetching={false} />
+        <TaskCard task={completedTask} isFetching={false} />
       </Provider>,
     );
 
@@ -709,9 +707,9 @@ describe("TaskListItem", () => {
   });
 });
 
-describe("SkeletonTaskListItem", () => {
-  it("should render skeleton component", () => {
-    render(<SkeletonTaskListItem />);
+describe("SkeletonTaskCard", () => {
+  it("should render skeleton loader", () => {
+    render(<SkeletonTaskCard />);
 
     const item = document.querySelector('[data-slot="item"]');
     expect(item).toBeDefined();
@@ -719,9 +717,9 @@ describe("SkeletonTaskListItem", () => {
   });
 });
 
-describe("EmptyTaskListItem", () => {
+describe("EmptyTaskCard", () => {
   it("should render empty state message", () => {
-    render(<EmptyTaskListItem />);
+    render(<EmptyTaskCard />);
 
     expect(screen.getByText("You have no tasks.")).toBeDefined();
     expect(document.querySelector('[data-slot="item"]')).toBeDefined();

@@ -65,15 +65,21 @@ vi.mock("@/components/ui/spinner", () => ({
   Spinner: () => <div data-testid="spinner">Loading...</div>,
 }));
 
-vi.mock("@/components/task-list-item", () => ({
-  EmptyTaskListItem: () => <div data-testid="empty-task-list">No tasks</div>,
-  SkeletonTaskListItem: ({ className }: { className?: string }) => (
+vi.mock("@/components/task-card", () => ({
+  TaskCard: ({ task }: { task: { text: string } }) => (
+    <div data-testid="task-item">{task.text}</div>
+  ),
+}));
+
+vi.mock("@/components/empty-task-card", () => ({
+  EmptyTaskCard: () => <div data-testid="empty-task-list">No tasks</div>,
+}));
+
+vi.mock("@/components/skeleton-task-card", () => ({
+  SkeletonTaskCard: ({ className }: { className?: string }) => (
     <div className={className} data-testid="skeleton-task">
       Skeleton
     </div>
-  ),
-  TaskListItem: ({ task }: { task: { text: string } }) => (
-    <div data-testid="task-item">{task.text}</div>
   ),
 }));
 
