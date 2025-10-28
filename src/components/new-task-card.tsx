@@ -52,44 +52,40 @@ export const NewTaskCard = () => {
     }
   };
 
-  if (typeof value === "string") {
-    return (
-      <Item variant="outline" className="group p-0">
-        <TaskInputGroup>
-          <TaskInputGroupInput
-            autoFocus={true}
-            value={value}
-            onChange={onChange}
-            placeholder="What's needs to bee done?"
-            className="text-base"
-            onBlur={onBlur}
-          />
-          <TaskInputGroupIconAddon>
-            <TaskIcon variant="foreground">
-              <SquarePlusIcon />
-            </TaskIcon>
-          </TaskInputGroupIconAddon>
-          {value && (
-            <TaskInputGroupButtonAddon>
-              <TaskButton
-                onClick={onAdd}
-                disabled={isLoading}
-                aria-busy={isLoading}
-                aria-description="Create task"
-                className={cn(
-                  "group-focus-within:bg-primary",
-                  "group-focus-within:border-primary",
-                  "group-focus-within:hover:bg-primary/90",
-                )}
-              >
-                <Icon className="group-focus-within:text-primary-foreground" />
-              </TaskButton>
-            </TaskInputGroupButtonAddon>
-          )}
-        </TaskInputGroup>
-      </Item>
-    );
-  }
-
-  return null;
+  return (
+    <Item variant="outline" className="group p-0">
+      <TaskInputGroup>
+        <TaskInputGroupInput
+          autoFocus={true}
+          value={value ?? ""}
+          onChange={onChange}
+          placeholder="What's needs to bee done?"
+          className="text-base"
+          onBlur={onBlur}
+        />
+        <TaskInputGroupIconAddon>
+          <TaskIcon variant="foreground">
+            <SquarePlusIcon />
+          </TaskIcon>
+        </TaskInputGroupIconAddon>
+        {value && (
+          <TaskInputGroupButtonAddon>
+            <TaskButton
+              onClick={onAdd}
+              disabled={isLoading}
+              aria-busy={isLoading}
+              aria-description="Create task"
+              className={cn(
+                "group-focus-within:bg-primary",
+                "group-focus-within:border-primary",
+                "group-focus-within:hover:bg-primary/90",
+              )}
+            >
+              <Icon className="group-focus-within:text-primary-foreground" />
+            </TaskButton>
+          </TaskInputGroupButtonAddon>
+        )}
+      </TaskInputGroup>
+    </Item>
+  );
 };

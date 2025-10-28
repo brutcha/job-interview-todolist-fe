@@ -77,7 +77,6 @@ export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
     }
     return null;
   })();
-
   const CheckboxIcon = (() => {
     if (isCompleting || isIncompleting) {
       return Spinner;
@@ -87,20 +86,8 @@ export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
     }
     return SquareIcon;
   })();
-
-  const DeleteIcon = (() => {
-    if (isDeleting) {
-      return Spinner;
-    }
-    return Trash2Icon;
-  })();
-
-  const SubmitIcon = (() => {
-    if (isSubmitting) {
-      return Spinner;
-    }
-    return SendHorizontalIcon;
-  })();
+  const DeleteIcon = isDeleting ? Spinner : Trash2Icon;
+  const SubmitIcon = isSubmitting ? Spinner : SendHorizontalIcon;
 
   const onCheckedChange = async () => {
     try {
@@ -137,13 +124,16 @@ export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
   };
 
   const onSubmit = async () => {
+    if (!inputValue) {
+      return;
+    }
     if (inputValue === text) {
       dispatch(userStateSlice.actions.clearEditingTask());
       return;
     }
 
     try {
-      await updateTask([id, { text: inputValue ?? "" }]).unwrap();
+      await updateTask([id, { text: inputValue }]).unwrap();
       toast.success("Task updated");
     } catch {
       toast.error("Failed to update task");

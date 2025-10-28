@@ -1,3 +1,5 @@
+import { useSelector } from "react-redux";
+
 import { AlertCircleIcon, RefreshCwIcon } from "lucide-react";
 
 import { EmptyTaskCard } from "@/components/empty-task-card";
@@ -14,10 +16,14 @@ import { todoApi } from "@/api/todo-api";
 import { getErrorMessage, isRetryableError } from "@/lib/error-helpers";
 import { isDev } from "@/lib/is-dev";
 import { cn } from "@/lib/utils";
+import type { State } from "@/store/store";
 
 export const TaskList = () => {
   const { data, error, isLoading, isFetching, refetch } =
     todoApi.useGetTasksQuery();
+  const shouldShowNewTask = useSelector(
+    (state: State) => typeof state.userState.newTaskText === "string",
+  );
 
   const taskCount = data?.length ?? 0;
   const statusMessage = isFetching
@@ -72,7 +78,7 @@ export const TaskList = () => {
           <TaskCard key={task.id} task={task} isFetching={isFetching} />
         ))}
         {data?.length === 0 && <EmptyTaskCard />}
-        <NewTaskCard />
+        {shouldShowNewTask && <NewTaskCard />}
       </ItemGroup>
     </>
   );

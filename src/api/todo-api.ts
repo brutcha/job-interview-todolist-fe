@@ -103,12 +103,8 @@ export const handleTaskDelete = async <T extends (action: unknown) => unknown>(
   taskID: TaskID,
   dispatch: T,
   queryFulfilled: Promise<unknown>,
-  minWaitTime = 250,
 ) => {
-  await Promise.all([
-    queryFulfilled,
-    new Promise((resolve) => setTimeout(resolve, minWaitTime)),
-  ]);
+  await queryFulfilled;
 
   dispatch(
     todoApi.util.updateQueryData(
@@ -150,11 +146,14 @@ export const todoApi = createApi({
         },
       }),
       createTask: build.mutation<Task, CreateTaskRequest>({
-        queryFn: debouncedQueryFn((body) => ({
-          url: "/tasks",
-          method: "POST",
-          body: Schema.encodeSync(CreateTaskRequestSchema)(body),
-        }), TaskSchema),
+        queryFn: debouncedQueryFn(
+          (body) => ({
+            url: "/tasks",
+            method: "POST",
+            body: Schema.encodeSync(CreateTaskRequestSchema)(body),
+          }),
+          TaskSchema,
+        ),
         async onQueryStarted(_, { dispatch, queryFulfilled }) {
           handleTaskCreate(dispatch, queryFulfilled);
         },
@@ -163,11 +162,14 @@ export const todoApi = createApi({
         Task,
         [taskID: TaskID, body: UpdateTaskRequest]
       >({
-        queryFn: debouncedQueryFn(([taskID, body]) => ({
-          url: `/tasks/${taskID}`,
-          method: "POST",
-          body: Schema.encodeSync(UpdateTaskRequestSchema)(body),
-        }), TaskSchema),
+        queryFn: debouncedQueryFn(
+          ([taskID, body]) => ({
+            url: `/tasks/${taskID}`,
+            method: "POST",
+            body: Schema.encodeSync(UpdateTaskRequestSchema)(body),
+          }),
+          TaskSchema,
+        ),
         async onQueryStarted([taskID], { dispatch, queryFulfilled }) {
           await handleTaskUpdate(taskID, dispatch, queryFulfilled, {
             clearEditingTask: true,
@@ -175,10 +177,13 @@ export const todoApi = createApi({
         },
       }),
       completeTask: build.mutation<Task, TaskID>({
-        queryFn: debouncedQueryFn((taskID) => ({
-          url: `tasks/${taskID}/complete`,
-          method: "POST",
-        }), TaskSchema),
+        queryFn: debouncedQueryFn(
+          (taskID) => ({
+            url: `tasks/${taskID}/complete`,
+            method: "POST",
+          }),
+          TaskSchema,
+        ),
         async onQueryStarted(taskID, { dispatch, queryFulfilled }) {
           await handleTaskUpdate(taskID, dispatch, queryFulfilled);
         },

@@ -687,6 +687,149 @@ describe("TaskCard", () => {
 
     expect(screen.getByText("Marking as incomplete")).toBeDefined();
   });
+
+  it("should not call updateTask when inputValue is null", async () => {
+    const user = userEvent.setup();
+    const mockUpdateTask = vi.fn().mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({}),
+    });
+
+    vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
+      mockUpdateTask,
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useIncompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useDeleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    const mockStore = {
+      ...store,
+      getState: () => ({
+        ...store.getState(),
+        userState: {
+          editingTaskID: "test-id",
+          editingTaskText: null,
+        },
+      }),
+      dispatch: vi.fn(),
+    };
+
+    render(
+      <Provider store={mockStore as unknown as Store}>
+        <TaskCard task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    const submitButton = screen.getByLabelText("Update Task");
+    await user.click(submitButton);
+
+    expect(mockUpdateTask).not.toHaveBeenCalled();
+  });
+
+  it("should not call updateTask when inputValue is empty string", async () => {
+    const user = userEvent.setup();
+    const mockUpdateTask = vi.fn().mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({}),
+    });
+
+    vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
+      mockUpdateTask,
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useIncompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useDeleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    const mockStore = {
+      ...store,
+      getState: () => ({
+        ...store.getState(),
+        userState: {
+          editingTaskID: "test-id",
+          editingTaskText: "",
+        },
+      }),
+      dispatch: vi.fn(),
+    };
+
+    render(
+      <Provider store={mockStore as unknown as Store}>
+        <TaskCard task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    const submitButton = screen.getByLabelText("Update Task");
+    await user.click(submitButton);
+
+    expect(mockUpdateTask).not.toHaveBeenCalled();
+  });
+
+  it("should show task text in input when inputValue is null", () => {
+    vi.spyOn(todoApi, "useUpdateTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useIncompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useDeleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    const mockStore = {
+      ...store,
+      getState: () => ({
+        ...store.getState(),
+        userState: {
+          editingTaskID: "test-id",
+          editingTaskText: null,
+        },
+      }),
+      dispatch: vi.fn(),
+    };
+
+    render(
+      <Provider store={mockStore as unknown as Store}>
+        <TaskCard task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    const input = screen.getByRole("textbox");
+    expect((input as HTMLInputElement).value).toBe("Test Task");
+  });
 });
 
 describe("SkeletonTaskCard", () => {

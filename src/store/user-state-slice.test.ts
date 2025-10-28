@@ -62,4 +62,36 @@ describe("userStateSlice", () => {
       expect(state.editingTaskText).toBeNull();
     });
   });
+
+  describe("editNewTask", () => {
+    it("should set newTaskText", () => {
+      const state = userStateSlice.reducer(
+        initialState,
+        userStateSlice.actions.editNewTask("New task text"),
+      );
+      expect(state.newTaskText).toBe("New task text");
+    });
+
+    it("should update newTaskText with empty string", () => {
+      const state = userStateSlice.reducer(
+        initialState,
+        userStateSlice.actions.editNewTask(""),
+      );
+      expect(state.newTaskText).toBe("");
+    });
+  });
+
+  describe("clearNewTask", () => {
+    it("should clear newTaskText", () => {
+      let state = userStateSlice.reducer(
+        initialState,
+        userStateSlice.actions.editNewTask("Some task"),
+      );
+      state = userStateSlice.reducer(
+        state,
+        userStateSlice.actions.clearNewTask(),
+      );
+      expect(state.newTaskText).toBeNull();
+    });
+  });
 });
