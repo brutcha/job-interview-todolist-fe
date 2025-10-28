@@ -1,7 +1,6 @@
 import type { ChangeEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { Either } from "effect";
 import { SendHorizontalIcon, SquarePlusIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,19 +16,14 @@ import { Item } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
 
 import { todoApi } from "@/api/todo-api";
-import { useDebouncedMutation } from "@/hooks/use-debounced-mutation";
 import { cn } from "@/lib/utils";
-import { CallFailed } from "@/schemas/model";
 import type { State } from "@/store/store";
 import { userStateSlice } from "@/store/user-state-slice";
 
 export const NewTaskCard = () => {
   const dispatch = useDispatch();
   const value = useSelector((state: State) => state.userState.newTaskText);
-  const [addTask, { isLoading }] = useDebouncedMutation(
-    todoApi.useCreateTaskMutation,
-    { blocking: true },
-  );
+  const [addTask, { isLoading }] = todoApi.useCreateTaskMutation();
 
   const Icon = isLoading ? Spinner : SendHorizontalIcon;
 
@@ -42,19 +36,12 @@ export const NewTaskCard = () => {
       return;
     }
 
-    const result = await addTask({ text: value });
-
-    Either.match(result, {
-      onRight() {
-        toast.success("New task was added.");
-        //dispatch(userStateSlice.actions.clearNewTask());
-      },
-      onLeft(error) {
-        if (error instanceof CallFailed) {
-          toast.error("Unable to add Task.");
-        }
-      },
-    });
+    try {
+      await addTask({ text: value }).unwrap();
+      toast.success("New task was added.");
+    } catch {
+      toast.error("Unable to add Task.");
+    }
   };
 
   const onBlur = () => {

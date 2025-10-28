@@ -1,5 +1,12 @@
+import type {
+  BaseQueryApi,
+  FetchArgs,
+  FetchBaseQueryError,
+  FetchBaseQueryMeta,
+  QueryReturnValue,
+} from "@reduxjs/toolkit/query";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 
 import { parseBaseURL } from "@/lib/parse-base-url";
 import {
@@ -15,6 +22,61 @@ import {
 } from "@/schemas/api";
 import { userStateSlice } from "@/store/user-state-slice";
 
+export const debouncedQueryFn = <TArgs, TResult, TEncoded = TResult>(
+  query: (args: TArgs) => string | FetchArgs,
+  responseSchema: Schema.Schema<TResult, TEncoded, never>,
+  debounceMs = 250,
+) => {
+  return async (
+    args: TArgs,
+    _api: BaseQueryApi,
+    _extraOptions: unknown,
+    baseQuery: (
+      arg: string | FetchArgs,
+    ) => Promise<
+      QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>
+    >,
+  ): Promise<
+    QueryReturnValue<
+      TResult,
+      FetchBaseQueryError,
+      FetchBaseQueryMeta | undefined
+    >
+  > => {
+    const [result] = await Promise.all([
+      baseQuery(query(args)),
+      new Promise((resolve) => setTimeout(resolve, debounceMs)),
+    ]);
+
+    if ("error" in result) {
+      return result as QueryReturnValue<
+        TResult,
+        FetchBaseQueryError,
+        FetchBaseQueryMeta | undefined
+      >;
+    }
+
+    return Either.match(
+      Schema.decodeUnknownEither(responseSchema)(result.data),
+      {
+        onLeft(error) {
+          return {
+            error: {
+              status: "PARSING_ERROR",
+              originalStatus: result.meta?.response?.status,
+              error: String(error),
+              data: result.data,
+            } as FetchBaseQueryError,
+          };
+        },
+        onRight(data) {
+          return { data };
+        },
+      },
+    );
+  };
+};
+
 export const handleTaskUpdate = async <T extends (action: unknown) => unknown>(
   taskID: TaskID,
   dispatch: T,
@@ -24,8 +86,11 @@ export const handleTaskUpdate = async <T extends (action: unknown) => unknown>(
   const { data } = await queryFulfilled;
 
   dispatch(
-    todoApi.util.updateQueryData("getTasks", undefined, (draft) =>
-      draft.map((task) => (task.id === taskID ? data : task)),
+    todoApi.util.updateQueryData(
+      "getTasks",
+      undefined,
+      (draft: GetTasksResponse) =>
+        draft.map((task) => (task.id === taskID ? data : task)),
     ),
   );
 
@@ -46,8 +111,10 @@ export const handleTaskDelete = async <T extends (action: unknown) => unknown>(
   ]);
 
   dispatch(
-    todoApi.util.updateQueryData("getTasks", undefined, (draft) =>
-      draft.filter((task) => task.id !== taskID),
+    todoApi.util.updateQueryData(
+      "getTasks",
+      undefined,
+      (draft: GetTasksResponse) => draft.filter((task) => task.id !== taskID),
     ),
   );
 };
@@ -60,10 +127,11 @@ export const handleTaskCreate = async <T extends (action: unknown) => unknown>(
 
   dispatch(userStateSlice.actions.clearNewTask());
   dispatch(
-    todoApi.util.updateQueryData("getTasks", undefined, (draft) => [
-      ...draft,
-      data,
-    ]),
+    todoApi.util.updateQueryData(
+      "getTasks",
+      undefined,
+      (draft: GetTasksResponse) => [...draft, data],
+    ),
   );
 };
 
@@ -72,6 +140,7 @@ export const todoApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: parseBaseURL(),
   }),
+  tagTypes: ["Task"],
   endpoints(build) {
     return {
       getTasks: build.query<GetTasksResponse, void>({
@@ -81,14 +150,11 @@ export const todoApi = createApi({
         },
       }),
       createTask: build.mutation<Task, CreateTaskRequest>({
-        query: (body) => ({
+        queryFn: debouncedQueryFn((body) => ({
           url: "/tasks",
           method: "POST",
           body: Schema.encodeSync(CreateTaskRequestSchema)(body),
-        }),
-        transformResponse(response: unknown) {
-          return Schema.decodeUnknownSync(TaskSchema)(response);
-        },
+        }), TaskSchema),
         async onQueryStarted(_, { dispatch, queryFulfilled }) {
           handleTaskCreate(dispatch, queryFulfilled);
         },
@@ -97,14 +163,11 @@ export const todoApi = createApi({
         Task,
         [taskID: TaskID, body: UpdateTaskRequest]
       >({
-        query: ([taskID, body]) => ({
-          url: `tasks/${taskID}`,
+        queryFn: debouncedQueryFn(([taskID, body]) => ({
+          url: `/tasks/${taskID}`,
           method: "POST",
           body: Schema.encodeSync(UpdateTaskRequestSchema)(body),
-        }),
-        transformResponse(response: unknown) {
-          return Schema.decodeUnknownSync(TaskSchema)(response);
-        },
+        }), TaskSchema),
         async onQueryStarted([taskID], { dispatch, queryFulfilled }) {
           await handleTaskUpdate(taskID, dispatch, queryFulfilled, {
             clearEditingTask: true,
@@ -112,36 +175,36 @@ export const todoApi = createApi({
         },
       }),
       completeTask: build.mutation<Task, TaskID>({
-        query: (taskID) => ({
+        queryFn: debouncedQueryFn((taskID) => ({
           url: `tasks/${taskID}/complete`,
           method: "POST",
-        }),
-        transformResponse(response: unknown) {
-          return Schema.decodeUnknownSync(TaskSchema)(response);
-        },
+        }), TaskSchema),
         async onQueryStarted(taskID, { dispatch, queryFulfilled }) {
           await handleTaskUpdate(taskID, dispatch, queryFulfilled);
         },
       }),
       incompleteTask: build.mutation<Task, TaskID>({
-        query: (taskID) => ({
-          url: `tasks/${taskID}/incomplete`,
-          method: "POST",
-        }),
-        transformResponse(response: unknown) {
-          return Schema.decodeUnknownSync(TaskSchema)(response);
-        },
+        queryFn: debouncedQueryFn(
+          (taskID: TaskID) => ({
+            url: `tasks/${taskID}/incomplete`,
+            method: "POST",
+          }),
+          TaskSchema,
+        ),
         async onQueryStarted(taskID, { dispatch, queryFulfilled }) {
           await handleTaskUpdate(taskID, dispatch, queryFulfilled);
         },
       }),
-      deleteTask: build.mutation<string, TaskID>({
-        query: (taskID) => ({
-          url: `tasks/${taskID}`,
-          method: "DELETE",
-        }),
-        async onQueryStarted(taskID, { dispatch, queryFulfilled }) {
-          await handleTaskDelete(taskID, dispatch, queryFulfilled);
+      deleteTask: build.mutation<void, TaskID>({
+        queryFn: debouncedQueryFn(
+          (taskID) => ({
+            url: `tasks/${taskID}`,
+            method: "DELETE",
+          }),
+          Schema.Void,
+        ),
+        async onQueryStarted(TaskID, { dispatch, queryFulfilled }) {
+          await handleTaskDelete(TaskID, dispatch, queryFulfilled);
         },
       }),
     };

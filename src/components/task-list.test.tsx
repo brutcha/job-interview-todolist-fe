@@ -83,6 +83,10 @@ vi.mock("@/components/skeleton-task-card", () => ({
   ),
 }));
 
+vi.mock("@/components/new-task-card", () => ({
+  NewTaskCard: () => <div data-testid="new-task-card">New Task</div>,
+}));
+
 vi.mock("lucide-react", () => ({
   AlertCircleIcon: () => <div data-testid="alert-circle-icon">Alert</div>,
   RefreshCwIcon: () => <div data-testid="refresh-icon">Refresh</div>,

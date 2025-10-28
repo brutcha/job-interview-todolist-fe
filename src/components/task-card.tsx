@@ -1,7 +1,6 @@
 import { type ChangeEvent, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { Either } from "effect";
 import {
   PencilIcon,
   SendHorizontalIcon,
@@ -32,10 +31,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 
 import { todoApi } from "@/api/todo-api";
-import { useDebouncedMutation } from "@/hooks/use-debounced-mutation";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/schemas/api";
-import { CallFailed } from "@/schemas/model";
 import type { State } from "@/store/store";
 import { userStateSlice } from "@/store/user-state-slice";
 
@@ -55,18 +52,14 @@ export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { id, text, completed } = task;
 
-  const [completeTask, { isLoading: isCompleting }] = useDebouncedMutation(
-    todoApi.useCompleteTaskMutation,
-  );
-  const [incompleteTask, { isLoading: isIncompleting }] = useDebouncedMutation(
-    todoApi.useIncompleteTaskMutation,
-  );
+  const [completeTask, { isLoading: isCompleting }] =
+    todoApi.useCompleteTaskMutation();
+  const [incompleteTask, { isLoading: isIncompleting }] =
+    todoApi.useIncompleteTaskMutation();
   const [deleteTask, { isLoading: isDeleting }] =
     todoApi.useDeleteTaskMutation();
-  const [updateTask, { isLoading: isSubmitting }] = useDebouncedMutation(
-    todoApi.useUpdateTaskMutation,
-    { blocking: true },
-  );
+  const [updateTask, { isLoading: isSubmitting }] =
+    todoApi.useUpdateTaskMutation();
 
   const isBusy =
     isFetching || isCompleting || isIncompleting || isDeleting || isSubmitting;
@@ -110,27 +103,17 @@ export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
   })();
 
   const onCheckedChange = async () => {
-    const result = completed
-      ? await incompleteTask(id)
-      : await completeTask(id);
-
-    Either.match(result, {
-      onLeft: (error) => {
-        if (error instanceof CallFailed) {
-          toast.error("Failed to update task");
-        }
-      },
-      onRight: () => {
-        toast.success(
-          completed ? "Task marked as incomplete" : "Task completed",
-        );
-      },
-    });
+    try {
+      await (completed ? incompleteTask(id) : completeTask(id)).unwrap();
+      toast.success(completed ? "Task marked as incomplete" : "Task completed");
+    } catch {
+      toast.error("Failed to update task");
+    }
   };
 
   const onDelete = async () => {
     try {
-      await deleteTask(id);
+      await deleteTask(id).unwrap();
       toast.success("Task deleted");
     } catch {
       toast.error("Failed to delete task");
@@ -159,18 +142,12 @@ export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
       return;
     }
 
-    const result = await updateTask([id, { text: inputValue ?? "" }]);
-
-    Either.match(result, {
-      onLeft: (error) => {
-        if (error instanceof CallFailed) {
-          toast.error("Failed to update task");
-        }
-      },
-      onRight: () => {
-        toast.success("Task updated");
-      },
-    });
+    try {
+      await updateTask([id, { text: inputValue ?? "" }]).unwrap();
+      toast.success("Task updated");
+    } catch {
+      toast.error("Failed to update task");
+    }
   };
 
   return (

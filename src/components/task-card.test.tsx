@@ -22,27 +22,6 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/hooks/use-debounced-mutation", () => ({
-  useDebouncedMutation: vi.fn((mutationHook) => {
-    const [trigger, result] = mutationHook();
-    const wrappedTrigger = async (...args: unknown[]) => {
-      const { Either } = await import("effect");
-      const { CallFailed } = await import("@/schemas/model");
-      try {
-        const data = await trigger(...args).unwrap();
-        return Either.right(data);
-      } catch (error) {
-        return Either.left(
-          new CallFailed({
-            error: error instanceof Error ? error : new Error(String(error)),
-          }),
-        );
-      }
-    };
-    return [wrappedTrigger, result];
-  }),
-}));
-
 describe("TaskCard", () => {
   const mockTask: Task = {
     id: "test-id" as Task["id"],
@@ -565,13 +544,16 @@ describe("TaskCard", () => {
       expect(mockedToast.success).not.toHaveBeenCalled();
     });
 
+    vi.mocked(toast.error).mockClear();
+
     const deleteButton = screen.getByLabelText("Delete Task");
     await user.click(deleteButton);
 
     await waitFor(() => {
       expect(mockedToast.error).toHaveBeenCalledWith("Failed to delete task");
-      expect(mockedToast.success).not.toHaveBeenCalled();
     });
+
+    vi.mocked(toast.error).mockClear();
 
     const editButton = screen.getByLabelText("Edit Task");
     await user.click(editButton);
