@@ -112,7 +112,7 @@ describe("NewTaskCard", () => {
 
     const button = screen.getByRole("button");
     expect(button).toBeDefined();
-    expect(button.getAttribute("aria-description")).toBe("Create task");
+    expect(button.getAttribute("aria-label")).toBe("Create task");
   });
 
   it("should not show submit button when value is empty", () => {
