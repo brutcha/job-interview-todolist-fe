@@ -1,7 +1,21 @@
-export function App() {
+import { TaskList } from "./components/task-list";
+
+export const App = () => {
   return (
-    <div className="flex flex-col gap-2">
-      <h1 className="underline">Vite + React</h1>
-    </div>
+    <>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50"
+      >
+        Skip to main content
+      </a>
+      <main
+        id="main"
+        className="flex flex-col container min-w-90 max-sm:px-2 sm:mx-auto gap-8"
+      >
+        <h1 className="text-3xl font-semibold mx-auto mt-8">My Tasks</h1>
+        <TaskList />
+      </main>
+    </>
   );
-}
+};

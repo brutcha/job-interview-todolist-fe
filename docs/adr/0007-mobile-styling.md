@@ -139,82 +139,6 @@ Development Flow:
 - ⚪ Can fall back to Tailwind v3 if v4 issues
 - ⚪ CSS Modules backup if Tailwind rejected
 
-## Implementation Approach
-
-### Installation
-
-```bash
-pnpm add tailwindcss@next @tailwindcss/vite@next
-pnpm add -D @tailwindcss/typography class-variance-authority clsx tailwind-merge
-pnpm dlx shadcn@latest init
-```
-
-### Tailwind 4 Configuration (CSS-First)
-
-**Vite plugin:**
-
-```typescript
-// vite.config.ts
-import tailwindcss from "@tailwindcss/vite";
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-});
-```
-
-**CSS configuration (no tailwind.config.ts):**
-
-```css
-/* src/index.css */
-@import "tailwindcss";
-
-@theme {
-  --color-primary: #3b82f6;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-}
-```
-
-### Responsive Breakpoints
-
-**Tailwind defaults:**
-
-- `sm`: 640px - Small tablets
-- `md`: 768px - Tablets
-- `lg`: 1024px - Desktops
-- `xl`: 1280px - Large desktops
-
-**This project uses:**
-
-- Mobile: default (< 768px)
-- Tablet: `md:` prefix (768px - 1023px)
-- Desktop: `lg:` prefix (1024px+)
-
-### Mobile-First Pattern
-
-```typescript
-// Mobile-first responsive classes
-<div className="
-  p-3 text-base           // Mobile (default)
-  md:p-4 md:text-sm       // Tablet (768px+)
-  lg:p-6 lg:text-base     // Desktop (1024px+)
-">
-```
-
-### Touch-Friendly Targets
-
-**WCAG 2.1 Level AAA:**
-
-- Minimum touch target: 44×44px
-- Minimum spacing: 8px
-
-**shadcn/ui button sizes:**
-
-- `default`: 40px height (acceptable)
-- `sm`: 36px height (small but usable)
-- `lg`: 48px height (ideal for mobile)
-- `icon`: 44×44px (WCAG compliant)
-
 ### Mobile Optimizations
 
 **Prevent iOS zoom on input focus:**
@@ -241,31 +165,6 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 ```
-
-## Testing Strategy
-
-**Chrome DevTools device emulation:**
-
-- iPhone SE (375×667) - Smallest common mobile
-- iPhone 14 Pro (393×852) - Modern mobile
-- iPad (768×1024) - Tablet
-- Desktop (1280×720+) - Desktop
-
-**Performance testing:**
-
-- Chrome DevTools Performance tab (not Lighthouse - SPA not suited)
-- Network throttling (Fast 3G, Slow 3G)
-- Frame rate monitoring (60fps target)
-
-**Manual testing checklist:**
-
-- [ ] All touch targets ≥44×44px
-- [ ] No horizontal scroll on mobile
-- [ ] Text readable without zoom (≥16px)
-- [ ] Buttons easy to tap (not too close)
-- [ ] Forms usable with touch keyboard
-- [ ] Images scale properly
-- [ ] No hover-dependent functionality
 
 ## Accessibility
 

@@ -11,10 +11,22 @@ vi.mock("./app", () => ({
   App: () => null,
 }));
 
+vi.mock("@/store/store", () => ({
+  store: {},
+}));
+
+vi.mock("@/components/ui/sonner", () => ({
+  Toaster: () => null,
+}));
+
+vi.mock("immer", () => ({
+  enableMapSet: vi.fn(),
+}));
+
 describe("main.tsx", () => {
   afterEach(() => {
     vi.clearAllMocks();
-    document.body.innerHTML = '';
+    document.body.innerHTML = "";
   });
 
   it("should call createRoot with the root element", async () => {

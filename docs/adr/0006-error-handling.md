@@ -186,13 +186,6 @@ How should we handle errors and communicate them to users in a way that's helpfu
 - Client errors: 4xx status codes (user needs to fix input)
 - Validation errors: 400, 422
 
-**Utility functions needed:**
-
-```typescript
-isRetryableError(error: unknown): boolean
-getErrorMessage(error: unknown): string
-```
-
 ### Error Display Patterns
 
 **Query errors (List/Read):**
@@ -218,23 +211,6 @@ getErrorMessage(error: unknown): string
 - Toast notification (bottom-right)
 - 3 second duration
 - Auto-dismiss
-
-### Installation
-
-```bash
-pnpm dlx shadcn@latest add sonner
-```
-
-## Testing Strategy
-
-**Test scenarios:**
-
-- Inline error display for network failures
-- Retry button shown for 5xx errors
-- No retry button for 4xx errors
-- Skeleton displays with minimum timing
-- Offline banner appears/disappears
-- Success toast displays and auto-dismisses
 
 ## Future Enhancements (Not in MVP)
 

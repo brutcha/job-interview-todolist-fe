@@ -131,33 +131,6 @@ State Management:
 - ⚪ For production SPA, might use TanStack Query instead
 - ⚪ Redux requirement is for demonstrating skills, not technical need
 
-## Implementation Notes
-
-### Usage in Components
-
-```typescript
-// components/todo-list.tsx
-import { useGetTodosQuery } from '@/api/todos-api'
-import { useAppSelector } from '@/store/hooks'
-import { selectCurrentFilter } from '@/store/filter-slice'
-
-export function TodoList() {
-  const filter = useAppSelector(selectCurrentFilter)
-  const { data: todos, isLoading, error } = useGetTodosQuery()
-
-  const filteredTodos = todos?.filter(todo => {
-    if (filter === 'active') return !todo.completed
-    if (filter === 'completed') return todo.completed
-    return true
-  })
-
-  if (isLoading) return <Spinner />
-  if (error) return <ErrorMessage error={error} />
-
-  return <div>{/* render filteredTodos */}</div>
-}
-```
-
 ## Alternative Considered for Production
 
 In a non-Redux-required project, I would use:
