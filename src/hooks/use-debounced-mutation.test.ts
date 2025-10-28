@@ -226,4 +226,112 @@ describe("useDebouncedMutation", () => {
     expect(mutationResult.isSuccess).toBe(true);
     expect(mutationResult.isError).toBe(false);
   });
+
+  it("should return Either.Right on successful mutation", async () => {
+    const { Either } = await import("effect");
+    const mockUnwrap = vi.fn().mockResolvedValue({ id: "123", text: "Test" });
+    const mockTrigger = vi.fn().mockReturnValue({ unwrap: mockUnwrap });
+    const mockUseMutation = vi
+      .fn()
+      .mockReturnValue([mockTrigger, { isLoading: false }]);
+
+    const { result } = renderHook(() =>
+      useDebouncedMutation(mockUseMutation, { minLoadingTime: 1 }),
+    );
+
+    let mutationResult: Awaited<ReturnType<(typeof result.current)[0]>>;
+
+    await act(async () => {
+      mutationResult = await result.current[0]("test-arg");
+    });
+
+    expect(Either.isRight(mutationResult!)).toBe(true);
+    if (Either.isRight(mutationResult!)) {
+      expect(mutationResult.right).toEqual({ id: "123", text: "Test" });
+    }
+  });
+
+  it("should return Either.Left on mutation failure", async () => {
+    const { Either } = await import("effect");
+    const mockUnwrap = vi.fn().mockRejectedValue(new Error("API Error"));
+    const mockTrigger = vi.fn().mockReturnValue({ unwrap: mockUnwrap });
+    const mockUseMutation = vi
+      .fn()
+      .mockReturnValue([mockTrigger, { isLoading: false }]);
+
+    const { result } = renderHook(() =>
+      useDebouncedMutation(mockUseMutation, { minLoadingTime: 1 }),
+    );
+
+    let mutationResult: Awaited<ReturnType<(typeof result.current)[0]>>;
+
+    await act(async () => {
+      mutationResult = await result.current[0]("test-arg");
+    });
+
+    expect(Either.isLeft(mutationResult!)).toBe(true);
+    if (Either.isLeft(mutationResult!)) {
+      expect(mutationResult.left._tag).toBe("CallFailed");
+      if (mutationResult.left._tag === "CallFailed") {
+        expect(mutationResult.left.error.message).toBe("API Error");
+      }
+    }
+  });
+
+  it("should block concurrent calls when blocking is enabled", async () => {
+    const { Either } = await import("effect");
+    let resolveMutation: (value: string) => void;
+    const promise = new Promise<string>((resolve) => {
+      resolveMutation = resolve;
+    });
+
+    const mockUnwrap = vi.fn().mockReturnValue(promise);
+    const mockTrigger = vi.fn().mockReturnValue({ unwrap: mockUnwrap });
+    const mockUseMutation = vi
+      .fn()
+      .mockReturnValue([mockTrigger, { isLoading: false }]);
+
+    const { result } = renderHook(() =>
+      useDebouncedMutation(mockUseMutation, {
+        minLoadingTime: 1,
+        blocking: true,
+      }),
+    );
+
+    let firstPromise: ReturnType<(typeof result.current)[0]>;
+    let secondResult: Awaited<ReturnType<(typeof result.current)[0]>>;
+
+    act(() => {
+      firstPromise = result.current[0]("arg1");
+    });
+
+    await waitFor(() => {
+      expect(result.current[1].isLoading).toBe(true);
+    });
+
+    await act(async () => {
+      secondResult = await result.current[0]("arg2");
+    });
+
+    expect(Either.isLeft(secondResult!)).toBe(true);
+    if (Either.isLeft(secondResult!)) {
+      expect(secondResult.left._tag).toBe("ConcurrentCallBlocked");
+    }
+
+    await act(async () => {
+      resolveMutation!("success");
+      await promise;
+    });
+
+    await waitFor(() => {
+      expect(result.current[1].isLoading).toBe(false);
+    });
+
+    const firstResult = await firstPromise!;
+    expect(Either.isRight(firstResult)).toBe(true);
+    if (Either.isRight(firstResult)) {
+      expect(firstResult.right).toBe("success");
+    }
+    expect(mockTrigger).toHaveBeenCalledTimes(1);
+  });
 });

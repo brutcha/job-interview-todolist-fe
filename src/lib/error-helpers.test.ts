@@ -63,6 +63,27 @@ describe("getErrorMessage", () => {
     expect(getErrorMessage(error)).toBe("Custom error message");
   });
 
+  it("should return 404 error message", () => {
+    const error = { status: 404, data: undefined };
+    expect(getErrorMessage(error)).toBe("Resource not found.");
+  });
+
+  it("should return 400 error message", () => {
+    const error = { status: 400, data: undefined };
+    expect(getErrorMessage(error)).toBe(
+      "Invalid request. Please check your input.",
+    );
+  });
+
+  it("should return message from SerializedError", () => {
+    const error = {
+      name: "Error",
+      message: "Something went wrong",
+      stack: "",
+    };
+    expect(getErrorMessage(error)).toBe("Something went wrong");
+  });
+
   it("should return generic message for unknown errors", () => {
     const error = { name: "Error", message: "", stack: "" };
     expect(getErrorMessage(error)).toBe("An unexpected error occurred.");

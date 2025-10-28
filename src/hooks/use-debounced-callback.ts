@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Either } from "effect";
+
+import {
+  CallFailed,
+  ConcurrentCallBlocked,
+  type DebouncedCallError,
+} from "@/schemas/model";
+
 interface UseDebouncedCallbackOptions {
   minLoadingTime?: number;
+  blocking?: boolean;
 }
 
 /**
@@ -10,26 +19,41 @@ interface UseDebouncedCallbackOptions {
  * Executes callback immediately (non-blocking) but maintains loading state
  * for minimum duration to prevent UI flicker on fast responses.
  *
- * Perfect for preventing flickering while allowing rapid successive calls.
+ * Returns Either<TResult, DebouncedCallError> for type-safe error handling.
+ * When blocking is enabled, concurrent calls return Left(ConcurrentCallBlocked).
  *
  * @example
  * const [handleSubmit, isSubmitting] = useDebouncedCallback(
  *   async (data) => await api.submit(data),
- *   { minLoadingTime: 250 }
+ *   { minLoadingTime: 250, blocking: true }
  * );
+ *
+ * const result = await handleSubmit(data);
+ * Either.match(result, {
+ *   onLeft: (error) => console.error(error),
+ *   onRight: (data) => console.log(data)
+ * });
  */
 export const useDebouncedCallback = <TArgs extends unknown[], TResult>(
   callback: (...args: TArgs) => Promise<TResult>,
   options: UseDebouncedCallbackOptions = {},
 ) => {
-  const { minLoadingTime = 250 } = options;
+  const { minLoadingTime = 250, blocking = false } = options;
 
   const [isLoading, setIsLoading] = useState(false);
   const loadingStartTimeRef = useRef<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isExecutingRef = useRef(false);
 
   const debouncedCallback = useCallback(
-    async (...args: TArgs): Promise<TResult> => {
+    async (
+      ...args: TArgs
+    ): Promise<Either.Either<TResult, DebouncedCallError>> => {
+      if (blocking && isExecutingRef.current) {
+        return Either.left(new ConcurrentCallBlocked());
+      }
+
+      isExecutingRef.current = true;
       loadingStartTimeRef.current = Date.now();
       setIsLoading(true);
 
@@ -47,14 +71,16 @@ export const useDebouncedCallback = <TArgs extends unknown[], TResult>(
           await new Promise<void>((resolve) => {
             timeoutRef.current = setTimeout(() => {
               setIsLoading(false);
+              isExecutingRef.current = false;
               resolve();
             }, remaining);
           });
         } else {
           setIsLoading(false);
+          isExecutingRef.current = false;
         }
 
-        return result;
+        return Either.right(result);
       } catch (error) {
         const elapsed = Date.now() - (loadingStartTimeRef.current || 0);
         const remaining = Math.max(0, minLoadingTime - elapsed);
@@ -63,17 +89,23 @@ export const useDebouncedCallback = <TArgs extends unknown[], TResult>(
           await new Promise<void>((resolve) => {
             timeoutRef.current = setTimeout(() => {
               setIsLoading(false);
+              isExecutingRef.current = false;
               resolve();
             }, remaining);
           });
         } else {
           setIsLoading(false);
+          isExecutingRef.current = false;
         }
 
-        throw error;
+        return Either.left(
+          new CallFailed({
+            error: error instanceof Error ? error : new Error(String(error)),
+          }),
+        );
       }
     },
-    [callback, minLoadingTime],
+    [callback, minLoadingTime, blocking],
   );
 
   useEffect(() => {

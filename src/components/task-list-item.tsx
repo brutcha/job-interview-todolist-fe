@@ -1,6 +1,7 @@
 import { type ChangeEvent, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { Either } from "effect";
 import {
   BrushCleaningIcon,
   PencilIcon,
@@ -29,6 +30,7 @@ import { todoApi } from "@/api/todo-api";
 import { useDebouncedMutation } from "@/hooks/use-debounced-mutation";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/schemas/api";
+import { CallFailed } from "@/schemas/model";
 import type { State } from "@/store/store";
 import { userStateSlice } from "@/store/user-state-slice";
 
@@ -61,6 +63,7 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
   );
   const [updateTask, { isLoading: isSubmitting }] = useDebouncedMutation(
     todoApi.useUpdateTaskMutation,
+    { blocking: true },
   );
 
   const isBusy =
@@ -105,26 +108,37 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
   })();
 
   const onCheckedChange = async () => {
-    try {
-      if (completed) {
-        await incompleteTask(id);
-        toast.success("Task marked as incomplete");
-      } else {
-        await completeTask(id);
-        toast.success("Task completed");
-      }
-    } catch {
-      toast.error("Failed to update task");
-    }
+    const result = completed
+      ? await incompleteTask(id)
+      : await completeTask(id);
+
+    Either.match(result, {
+      onLeft: (error) => {
+        if (error instanceof CallFailed) {
+          toast.error("Failed to update task");
+        }
+      },
+      onRight: () => {
+        toast.success(
+          completed ? "Task marked as incomplete" : "Task completed",
+        );
+      },
+    });
   };
 
   const onDelete = async () => {
-    try {
-      await deleteTask(id);
-      toast.success("Task deleted");
-    } catch {
-      toast.error("Failed to delete task");
-    }
+    const result = await deleteTask(id);
+
+    Either.match(result, {
+      onLeft: (error) => {
+        if (error instanceof CallFailed) {
+          toast.error("Failed to delete task");
+        }
+      },
+      onRight: () => {
+        toast.success("Task deleted");
+      },
+    });
   };
 
   const onEditToggle = () => {
@@ -149,19 +163,17 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
       return;
     }
 
-    try {
-      await updateTask([id, { text: inputValue ?? "" }]);
-      toast.success("Task updated");
-    } catch {
-      toast.error("Failed to update task");
-    }
-  };
+    const result = await updateTask([id, { text: inputValue ?? "" }]);
 
-  const onInputBlur = async () => {
-    requestAnimationFrame(() => {
-      if (!isSubmitting) {
-        onSubmit();
-      }
+    Either.match(result, {
+      onLeft: (error) => {
+        if (error instanceof CallFailed) {
+          toast.error("Failed to update task");
+        }
+      },
+      onRight: () => {
+        toast.success("Task updated");
+      },
     });
   };
 
@@ -196,11 +208,11 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
               <ItemTitle>{text}</ItemTitle>
             </ItemContent>
             <ItemActions>
-              <ButtonGroup>
+              <ButtonGroup className="-my-2">
                 {!isEditing && (
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="icon-lg"
                     onClick={onDelete}
                     disabled={isBusy}
                     aria-label="Delete Task"
@@ -211,8 +223,8 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
                 )}
                 {!isEditing && (
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="icon-lg"
                     onClick={onEditToggle}
                     disabled={isBusy}
                     aria-label="Edit Task"
@@ -233,7 +245,7 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
                 type="text"
                 value={inputValue ?? text}
                 onChange={onInputChange}
-                onBlur={onInputBlur}
+                onBlur={onSubmit}
                 className="font-medium border-none shadow-none -mt-0.5"
               />
               <InputGroupAddon aria-hidden>

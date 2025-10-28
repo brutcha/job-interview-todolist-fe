@@ -27,7 +27,20 @@ vi.mock("sonner", () => ({
 vi.mock("@/hooks/use-debounced-mutation", () => ({
   useDebouncedMutation: vi.fn((mutationHook) => {
     const [trigger, result] = mutationHook();
-    const wrappedTrigger = (...args: unknown[]) => trigger(...args).unwrap();
+    const wrappedTrigger = async (...args: unknown[]) => {
+      const { Either } = await import("effect");
+      const { CallFailed } = await import("@/schemas/model");
+      try {
+        const data = await trigger(...args).unwrap();
+        return Either.right(data);
+      } catch (error) {
+        return Either.left(
+          new CallFailed({
+            error: error instanceof Error ? error : new Error(String(error)),
+          }),
+        );
+      }
+    };
     return [wrappedTrigger, result];
   }),
 }));
@@ -616,6 +629,83 @@ describe("TaskListItem", () => {
     await waitFor(() => {
       expect(mockUpdateTask).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("should show deleting status message", () => {
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useIncompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useDeleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: true },
+    ] as never);
+
+    render(
+      <Provider store={store}>
+        <TaskListItem task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    expect(screen.getByText("Deleting task")).toBeDefined();
+  });
+
+  it("should show completing status message", () => {
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: true },
+    ] as never);
+
+    vi.spyOn(todoApi, "useIncompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useDeleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    render(
+      <Provider store={store}>
+        <TaskListItem task={mockTask} isFetching={false} />
+      </Provider>,
+    );
+
+    expect(screen.getByText("Marking as complete")).toBeDefined();
+  });
+
+  it("should show incompleting status message", () => {
+    const completedTask: Task = { ...mockTask, completed: true };
+
+    vi.spyOn(todoApi, "useCompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    vi.spyOn(todoApi, "useIncompleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: true },
+    ] as never);
+
+    vi.spyOn(todoApi, "useDeleteTaskMutation").mockReturnValue([
+      vi.fn(),
+      { isLoading: false },
+    ] as never);
+
+    render(
+      <Provider store={store}>
+        <TaskListItem task={completedTask} isFetching={false} />
+      </Provider>,
+    );
+
+    expect(screen.getByText("Marking as incomplete")).toBeDefined();
   });
 });
 
