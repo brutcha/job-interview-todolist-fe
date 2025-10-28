@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { TaskID } from "@/schemas/api";
 
 import {
-  debouncedQueryFn,
+  minDelayQueryFn,
   handleTaskCreate,
   handleTaskDelete,
   handleTaskUpdate,
@@ -248,7 +248,7 @@ describe("debouncedQueryFn", () => {
     );
     const mockSchema = Schema.Struct({ test: Schema.String });
 
-    const queryFn = debouncedQueryFn(mockQuery, mockSchema, 1);
+    const queryFn = minDelayQueryFn(mockQuery, mockSchema, 1);
 
     const startTime = Date.now();
     const result = await queryFn(
@@ -280,7 +280,7 @@ describe("debouncedQueryFn", () => {
     );
     const mockSchema = Schema.Struct({ test: Schema.String });
 
-    const queryFn = debouncedQueryFn(mockQuery, mockSchema, 1);
+    const queryFn = minDelayQueryFn(mockQuery, mockSchema, 1);
 
     const result = await queryFn(
       "test-arg",
@@ -308,7 +308,7 @@ describe("debouncedQueryFn", () => {
     );
     const mockSchema = Schema.Struct({ test: Schema.String });
 
-    const queryFn = debouncedQueryFn(mockQuery, mockSchema, 1);
+    const queryFn = minDelayQueryFn(mockQuery, mockSchema, 1);
 
     const result = await queryFn(
       "test-arg",

@@ -22,7 +22,7 @@ import {
 } from "@/schemas/api";
 import { userStateSlice } from "@/store/user-state-slice";
 
-export const debouncedQueryFn = <TArgs, TResult, TEncoded = TResult>(
+export const minDelayQueryFn = <TArgs, TResult, TEncoded = TResult>(
   query: (args: TArgs) => string | FetchArgs,
   responseSchema: Schema.Schema<TResult, TEncoded, never>,
   debounceMs = 250,
@@ -141,10 +141,10 @@ export const todoApi = createApi({
   endpoints(build) {
     return {
       getTasks: build.query<GetTasksResponse, void>({
-        queryFn: debouncedQueryFn(() => "/tasks", GetTasksResponseSchema),
+        queryFn: minDelayQueryFn(() => "/tasks", GetTasksResponseSchema),
       }),
       createTask: build.mutation<Task, CreateTaskRequest>({
-        queryFn: debouncedQueryFn(
+        queryFn: minDelayQueryFn(
           (body) => ({
             url: "/tasks",
             method: "POST",
@@ -160,7 +160,7 @@ export const todoApi = createApi({
         Task,
         [taskID: TaskID, body: UpdateTaskRequest]
       >({
-        queryFn: debouncedQueryFn(
+        queryFn: minDelayQueryFn(
           ([taskID, body]) => ({
             url: `/tasks/${taskID}`,
             method: "POST",
@@ -175,7 +175,7 @@ export const todoApi = createApi({
         },
       }),
       completeTask: build.mutation<Task, TaskID>({
-        queryFn: debouncedQueryFn(
+        queryFn: minDelayQueryFn(
           (taskID) => ({
             url: `/tasks/${taskID}/complete`,
             method: "POST",
@@ -187,7 +187,7 @@ export const todoApi = createApi({
         },
       }),
       incompleteTask: build.mutation<Task, TaskID>({
-        queryFn: debouncedQueryFn(
+        queryFn: minDelayQueryFn(
           (taskID: TaskID) => ({
             url: `/tasks/${taskID}/incomplete`,
             method: "POST",
@@ -199,7 +199,7 @@ export const todoApi = createApi({
         },
       }),
       deleteTask: build.mutation<void, TaskID>({
-        queryFn: debouncedQueryFn(
+        queryFn: minDelayQueryFn(
           (taskID) => ({
             url: `tasks/${taskID}`,
             method: "DELETE",

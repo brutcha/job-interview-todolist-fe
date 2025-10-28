@@ -74,7 +74,7 @@ export const NewTaskCard = () => {
               onClick={onAdd}
               disabled={isLoading}
               aria-busy={isLoading}
-              aria-description="Create task"
+              aria-label="Create task"
               className={cn(
                 "group-focus-within:bg-primary",
                 "group-focus-within:border-primary",
