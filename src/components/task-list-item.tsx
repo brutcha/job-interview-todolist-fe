@@ -254,7 +254,6 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
                 </div>
               </InputGroupAddon>
               <InputGroupAddon align="inline-end">
-                {" "}
                 <Button
                   variant="outline"
                   size="icon-lg"
