@@ -1,3 +1,4 @@
+import { waitFor } from "@testing-library/react";
 import { Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -259,35 +260,22 @@ describe("debouncedQueryFn", () => {
     const endTime = Date.now();
 
     expect(endTime - startTime).toBeGreaterThanOrEqual(1);
-    expect(result).toEqual({ data: { test: "value" } });
+    expect(result).toEqual({
+      data: { test: "value" },
+      meta: { response: { status: 200 } },
+    });
     expect(mockQuery).toHaveBeenCalledWith("test-arg");
     expect(mockBaseQuery).toHaveBeenCalledWith({ url: "/test" });
   });
 
   it("should return error on failed query", async () => {
     const mockQuery = vi.fn(() => ({ url: "/test" }));
+    const mockText = vi.fn(() => Promise.resolve("text"));
     const mockError = { status: 500, data: "Server error" };
-    const mockBaseQuery = vi.fn(() => Promise.resolve({ error: mockError }));
-    const mockSchema = Schema.Struct({ test: Schema.String });
-
-    const queryFn = debouncedQueryFn(mockQuery, mockSchema, 1);
-
-    const result = await queryFn(
-      "test-arg",
-      {} as never,
-      {},
-      mockBaseQuery as never,
-    );
-
-    expect(result).toEqual({ error: mockError });
-  });
-
-  it("should return parsing error on invalid response", async () => {
-    const mockQuery = vi.fn(() => ({ url: "/test" }));
     const mockBaseQuery = vi.fn(() =>
       Promise.resolve({
-        data: { invalid: 123 },
-        meta: { response: { status: 200 } },
+        error: mockError,
+        meta: { response: { text: mockText } },
       }),
     );
     const mockSchema = Schema.Struct({ test: Schema.String });
@@ -301,12 +289,43 @@ describe("debouncedQueryFn", () => {
       mockBaseQuery as never,
     );
 
-    expect(result).toHaveProperty("error");
-    if ("error" in result) {
-      expect(result.error).toMatchObject({
-        status: "PARSING_ERROR",
-        originalStatus: 200,
-      });
-    }
+    waitFor(() => {
+      expect(result).toMatchObject({ error: mockError });
+      expect(mockText).toBeCalled();
+    });
+  });
+
+  it("should return parsing error on invalid response", async () => {
+    const mockQuery = vi.fn(() => ({ url: "/test" }));
+    const mockText = vi.fn(() => Promise.resolve("text"));
+    const mockBaseQuery = vi.fn(() =>
+      Promise.resolve({
+        data: { invalid: 123 },
+        meta: {
+          response: { status: 200, text: mockText },
+        },
+      }),
+    );
+    const mockSchema = Schema.Struct({ test: Schema.String });
+
+    const queryFn = debouncedQueryFn(mockQuery, mockSchema, 1);
+
+    const result = await queryFn(
+      "test-arg",
+      {} as never,
+      {},
+      mockBaseQuery as never,
+    );
+
+    waitFor(() => {
+      expect(result).toHaveProperty("error");
+      if ("error" in result) {
+        expect(result.error).toMatchObject({
+          status: "PARSING_ERROR",
+          originalStatus: 200,
+        });
+      }
+      expect(mockText).toBeCalled();
+    });
   });
 });

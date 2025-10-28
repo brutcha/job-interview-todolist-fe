@@ -9,7 +9,7 @@ import { userStateSlice } from "@/store/user-state-slice";
 export const AddTaskButton = () => {
   const dispatch = useDispatch();
 
-  const onClick = async () => {
+  const onClick = () => {
     dispatch(userStateSlice.actions.editNewTask(""));
   };
 

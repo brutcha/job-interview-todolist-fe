@@ -59,7 +59,7 @@ export const NewTaskCard = () => {
           autoFocus={true}
           value={value ?? ""}
           onChange={onChange}
-          placeholder="What's needs to bee done?"
+          placeholder="What needs to bee done?"
           className="text-base"
           onBlur={onBlur}
         />

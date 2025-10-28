@@ -59,18 +59,19 @@ export const debouncedQueryFn = <TArgs, TResult, TEncoded = TResult>(
     return Either.match(
       Schema.decodeUnknownEither(responseSchema)(result.data),
       {
-        onLeft(error) {
+        async onLeft(error) {
           return {
             error: {
               status: "PARSING_ERROR",
-              originalStatus: result.meta?.response?.status,
+              originalStatus: result.meta?.response?.status ?? 200,
               error: String(error),
-              data: result.data,
-            } as FetchBaseQueryError,
+              data: (await result.meta?.response?.text()) ?? "",
+            } satisfies FetchBaseQueryError,
+            meta: result.meta,
           };
         },
         onRight(data) {
-          return { data };
+          return { data, meta: result.meta };
         },
       },
     );
@@ -140,10 +141,7 @@ export const todoApi = createApi({
   endpoints(build) {
     return {
       getTasks: build.query<GetTasksResponse, void>({
-        query: () => "/tasks",
-        transformResponse(response: unknown) {
-          return Schema.decodeUnknownSync(GetTasksResponseSchema)(response);
-        },
+        queryFn: debouncedQueryFn(() => "/tasks", GetTasksResponseSchema),
       }),
       createTask: build.mutation<Task, CreateTaskRequest>({
         queryFn: debouncedQueryFn(
@@ -155,7 +153,7 @@ export const todoApi = createApi({
           TaskSchema,
         ),
         async onQueryStarted(_, { dispatch, queryFulfilled }) {
-          handleTaskCreate(dispatch, queryFulfilled);
+          await handleTaskCreate(dispatch, queryFulfilled);
         },
       }),
       updateTask: build.mutation<
@@ -179,7 +177,7 @@ export const todoApi = createApi({
       completeTask: build.mutation<Task, TaskID>({
         queryFn: debouncedQueryFn(
           (taskID) => ({
-            url: `tasks/${taskID}/complete`,
+            url: `/tasks/${taskID}/complete`,
             method: "POST",
           }),
           TaskSchema,
@@ -191,7 +189,7 @@ export const todoApi = createApi({
       incompleteTask: build.mutation<Task, TaskID>({
         queryFn: debouncedQueryFn(
           (taskID: TaskID) => ({
-            url: `tasks/${taskID}/incomplete`,
+            url: `/tasks/${taskID}/incomplete`,
             method: "POST",
           }),
           TaskSchema,
@@ -208,8 +206,8 @@ export const todoApi = createApi({
           }),
           Schema.Void,
         ),
-        async onQueryStarted(TaskID, { dispatch, queryFulfilled }) {
-          await handleTaskDelete(TaskID, dispatch, queryFulfilled);
+        async onQueryStarted(taskID, { dispatch, queryFulfilled }) {
+          await handleTaskDelete(taskID, dispatch, queryFulfilled);
         },
       }),
     };

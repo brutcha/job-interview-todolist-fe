@@ -78,7 +78,7 @@ describe("NewTaskCard", () => {
       </Provider>,
     );
 
-    const input = screen.getByPlaceholderText(/what's needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to bee done/i);
     expect(input).toBeDefined();
   });
 
@@ -91,9 +91,9 @@ describe("NewTaskCard", () => {
       </Provider>,
     );
 
-    const input = screen.getByPlaceholderText(/what's needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to bee done/i);
 
-    waitFor(async () => {
+    await waitFor(async () => {
       await user.type(input, "New task");
       expect(store.getState().userState.newTaskText).toBe("New task");
     });
@@ -177,7 +177,7 @@ describe("NewTaskCard", () => {
       store.dispatch(userStateSlice.actions.editNewTask("Task on blur"));
     });
 
-    const input = screen.getByPlaceholderText(/what's needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to bee done/i);
     input.blur();
 
     expect(mockCreateTask).toBeCalledWith({ text: "Task on blur" });
@@ -201,10 +201,9 @@ describe("NewTaskCard", () => {
 
     act(() => {
       store.dispatch(userStateSlice.actions.editNewTask(""));
+      const input = screen.getByPlaceholderText(/what needs to bee done/i);
+      input.blur();
     });
-
-    const input = screen.getByPlaceholderText(/what's needs to bee done/i);
-    input.blur();
 
     await waitFor(() => {
       expect(store.getState().userState.newTaskText).toBeNull();
@@ -319,10 +318,10 @@ describe("NewTaskCard", () => {
       store.dispatch(userStateSlice.actions.editNewTask("Test"));
     });
 
-    const input = screen.getByPlaceholderText(/what's needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to bee done/i);
     await user.clear(input);
 
-    waitFor(() => {
+    await waitFor(() => {
       const button = screen.queryByRole("button");
       expect(button).toBeNull();
     });

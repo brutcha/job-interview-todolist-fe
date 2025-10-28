@@ -124,16 +124,17 @@ export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
   };
 
   const onSubmit = async () => {
-    if (!inputValue) {
+    const value = inputRef.current?.value ?? inputValue;
+    if (!value) {
       return;
     }
-    if (inputValue === text) {
+    if (value === text) {
       dispatch(userStateSlice.actions.clearEditingTask());
       return;
     }
 
     try {
-      await updateTask([id, { text: inputValue }]).unwrap();
+      await updateTask([id, { text: value }]).unwrap();
       toast.success("Task updated");
     } catch {
       toast.error("Failed to update task");
