@@ -55,7 +55,7 @@ export const NewTaskCard = () => {
   };
 
   return (
-    <Item variant="outline" className="group p-0">
+    <Item variant="outline" className="group p-0 bg-card">
       <TaskInputGroup>
         <TaskInputGroupInput
           autoFocus={true}

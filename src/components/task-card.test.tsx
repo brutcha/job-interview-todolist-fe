@@ -844,9 +844,21 @@ describe("SkeletonTaskCard", () => {
 
 describe("EmptyTaskCard", () => {
   it("should render empty state message", () => {
-    render(<EmptyTaskCard />);
+    render(<EmptyTaskCard filter="all" />);
 
     expect(screen.getByText("You have no tasks.")).toBeDefined();
     expect(document.querySelector('[data-slot="item"]')).toBeDefined();
+  });
+
+  it("should render filter-specific empty state message for active", () => {
+    render(<EmptyTaskCard filter="active" />);
+
+    expect(screen.getByText("You have no active tasks.")).toBeDefined();
+  });
+
+  it("should render filter-specific empty state message for completed", () => {
+    render(<EmptyTaskCard filter="completed" />);
+
+    expect(screen.getByText("You have no completed tasks.")).toBeDefined();
   });
 });

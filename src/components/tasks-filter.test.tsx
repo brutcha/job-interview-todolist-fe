@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Filter } from "@/schemas/model";
 import { userStateSlice } from "@/store/user-state-slice";
 
-import { TasksFilter } from "./task-filter";
+import { TasksFilter } from "./tasks-filter";
 
 let mockOnValueChange: ((value: string) => void) | undefined;
 
@@ -49,25 +49,30 @@ describe("TasksFilter", () => {
     const store = createTestStore();
     render(
       <Provider store={store}>
-        <TasksFilter />
+        <TasksFilter filter="all" count={0} activeCount={0} completeCount={0} />
       </Provider>,
     );
 
-    expect(screen.getByRole("radio", { name: "All" })).toBeDefined();
-    expect(screen.getByRole("radio", { name: "Active" })).toBeDefined();
-    expect(screen.getByRole("radio", { name: "Completed" })).toBeDefined();
+    expect(screen.getByRole("radio", { name: /All/ })).toBeDefined();
+    expect(screen.getByRole("radio", { name: /Active/ })).toBeDefined();
+    expect(screen.getByRole("radio", { name: /Completed/ })).toBeDefined();
   });
 
   it("should have 'all' selected by default", () => {
     const store = createTestStore();
     render(
       <Provider store={store}>
-        <TasksFilter />
+        <TasksFilter
+          filter="all"
+          count={10}
+          activeCount={5}
+          completeCount={5}
+        />
       </Provider>,
     );
 
     expect(
-      screen.getByRole("radio", { name: "All" }).getAttribute("data-state"),
+      screen.getByRole("radio", { name: /All/ }).getAttribute("data-state"),
     ).toBe("on");
   });
 
@@ -77,11 +82,16 @@ describe("TasksFilter", () => {
 
     render(
       <Provider store={store}>
-        <TasksFilter />
+        <TasksFilter
+          filter="all"
+          count={10}
+          activeCount={5}
+          completeCount={5}
+        />
       </Provider>,
     );
 
-    await user.click(screen.getByRole("radio", { name: "Active" }));
+    await user.click(screen.getByRole("radio", { name: /Active/ }));
 
     expect(store.getState().userState.filter).toBe("active");
   });
@@ -92,11 +102,16 @@ describe("TasksFilter", () => {
 
     render(
       <Provider store={store}>
-        <TasksFilter />
+        <TasksFilter
+          filter="all"
+          count={10}
+          activeCount={5}
+          completeCount={5}
+        />
       </Provider>,
     );
 
-    await user.click(screen.getByRole("radio", { name: "Completed" }));
+    await user.click(screen.getByRole("radio", { name: /Completed/ }));
 
     expect(store.getState().userState.filter).toBe("completed");
   });
@@ -106,15 +121,20 @@ describe("TasksFilter", () => {
 
     render(
       <Provider store={store}>
-        <TasksFilter />
+        <TasksFilter
+          filter="active"
+          count={10}
+          activeCount={5}
+          completeCount={5}
+        />
       </Provider>,
     );
 
     expect(
-      screen.getByRole("radio", { name: "Active" }).getAttribute("data-state"),
+      screen.getByRole("radio", { name: /Active/ }).getAttribute("data-state"),
     ).toBe("on");
     expect(
-      screen.getByRole("radio", { name: "All" }).getAttribute("data-state"),
+      screen.getByRole("radio", { name: /All/ }).getAttribute("data-state"),
     ).toBe("off");
   });
 
@@ -123,7 +143,12 @@ describe("TasksFilter", () => {
 
     render(
       <Provider store={store}>
-        <TasksFilter />
+        <TasksFilter
+          filter="all"
+          count={10}
+          activeCount={5}
+          completeCount={5}
+        />
       </Provider>,
     );
 

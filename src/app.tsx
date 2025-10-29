@@ -25,10 +25,10 @@ export const App = () => {
         id="main"
         className="flex flex-col container min-w-90 max-sm:px-2 sm:mx-auto gap-8"
       >
-        <div className="flex justify-between items-center mt-8 px-4">
+        <header className="flex justify-between items-center mt-8 px-4">
           <h1 className="text-3xl font-semibold">My Tasks</h1>
           {shouldShowAddButton && <AddTaskButton />}
-        </div>
+        </header>
 
         <TaskList />
       </main>

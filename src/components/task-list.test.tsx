@@ -72,6 +72,21 @@ vi.mock("@/components/ui/item", () => ({
       {children}
     </div>
   ),
+  ItemActions: ({ children, ...props }: { children?: React.ReactNode }) => (
+    <div data-slot="item-actions" {...props}>
+      {children}
+    </div>
+  ),
+  ItemMedia: ({ children, ...props }: { children?: React.ReactNode }) => (
+    <div data-slot="item-media" {...props}>
+      {children}
+    </div>
+  ),
+  ItemTitle: ({ children, ...props }: { children?: React.ReactNode }) => (
+    <div data-slot="item-title" {...props}>
+      {children}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/ui/spinner", () => ({
@@ -85,7 +100,11 @@ vi.mock("@/components/task-card", () => ({
 }));
 
 vi.mock("@/components/empty-task-card", () => ({
-  EmptyTaskCard: () => <div data-testid="empty-task-list">No tasks</div>,
+  EmptyTaskCard: ({ filter }: { filter: string }) => (
+    <div data-testid="empty-task-list">
+      No {filter !== "all" && filter} tasks
+    </div>
+  ),
 }));
 
 vi.mock("@/components/skeleton-task-card", () => ({
@@ -100,8 +119,41 @@ vi.mock("@/components/new-task-card", () => ({
   NewTaskCard: () => <div data-testid="new-task-card">New Task</div>,
 }));
 
-vi.mock("@/components/task-filter", () => ({
-  TasksFilter: () => <div data-testid="tasks-filter">Filter</div>,
+vi.mock("@/components/tasks-filter", () => ({
+  TasksFilter: ({
+    filter,
+    count,
+    activeCount,
+    completeCount,
+  }: {
+    filter: string;
+    count: number;
+    activeCount: number;
+    completeCount: number;
+  }) => (
+    <div data-testid="tasks-filter">
+      Filter: {filter} ({count} total, {activeCount} active, {completeCount}{" "}
+      completed)
+    </div>
+  ),
+}));
+
+vi.mock("@/components/tasks-actions", () => ({
+  TasksActions: ({
+    visibleActiveIDs,
+    visibleCompletedIDs,
+    isLoading,
+  }: {
+    visibleActiveIDs: string[];
+    visibleCompletedIDs: string[];
+    isLoading: boolean;
+  }) => (
+    <div data-testid="tasks-actions">
+      <div aria-atomic="true">Loading tasks...</div>
+      Actions: {visibleActiveIDs.length} active, {visibleCompletedIDs.length}{" "}
+      completed, loading: {isLoading.toString()}
+    </div>
+  ),
 }));
 
 vi.mock("lucide-react", () => ({
@@ -126,7 +178,14 @@ describe("TaskList", () => {
   it("should render loading state", async () => {
     const { todoApi } = await import("@/api/todo-api");
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: undefined,
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: undefined,
       isLoading: true,
       isFetching: false,
@@ -158,7 +217,14 @@ describe("TaskList", () => {
     ];
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockTasks,
+      data: {
+        items: mockTasks,
+        count: 2,
+        activeCount: 1,
+        completeCount: 1,
+        visibleActiveIDs: ["task_01234567890123456789012"],
+        visibleCompletedIDs: ["task_01234567890123456789013"],
+      },
       error: undefined,
       isLoading: false,
       isFetching: false,
@@ -176,7 +242,14 @@ describe("TaskList", () => {
     const mockError = { status: "FETCH_ERROR", error: "Network error" };
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: undefined,
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: mockError,
       isLoading: false,
       isFetching: false,
@@ -192,7 +265,14 @@ describe("TaskList", () => {
   it("should render empty state when no tasks", async () => {
     const { todoApi } = await import("@/api/todo-api");
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: [],
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: undefined,
       isLoading: false,
       isFetching: false,
@@ -210,7 +290,14 @@ describe("TaskList", () => {
     const mockError = { status: "FETCH_ERROR", error: "Network error" };
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: undefined,
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: mockError,
       isLoading: false,
       isFetching: false,
@@ -233,7 +320,14 @@ describe("TaskList", () => {
     const mockError = { status: "FETCH_ERROR", error: "Network error" };
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: undefined,
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: mockError,
       isLoading: false,
       isFetching: false,
@@ -252,7 +346,14 @@ describe("TaskList", () => {
     const mockError = { status: "FETCH_ERROR", error: "Network error" };
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: undefined,
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: mockError,
       isLoading: false,
       isFetching: true,
@@ -277,17 +378,24 @@ describe("TaskList", () => {
     ];
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockTasks,
+      data: {
+        items: mockTasks,
+        count: 1,
+        activeCount: 1,
+        completeCount: 0,
+        visibleActiveIDs: ["task_01234567890123456789012"],
+        visibleCompletedIDs: [],
+      },
       error: undefined,
       isLoading: false,
-      isFetching: false,
+      isFetching: true,
       refetch: vi.fn(),
     });
 
     const { container } = render(<TaskList />);
 
     const screenReader = container.querySelector("[aria-atomic='true']");
-    expect(screenReader?.textContent).toBe("1 task");
+    expect(screenReader?.textContent).toBe("Loading tasks...");
   });
 
   it("should not show NewTaskCard when newTaskText is not a string", async () => {
@@ -300,7 +408,14 @@ describe("TaskList", () => {
     );
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: [],
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: undefined,
       isLoading: false,
       isFetching: false,
@@ -323,7 +438,14 @@ describe("TaskList", () => {
     );
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: [],
+      data: {
+        items: [],
+        count: 0,
+        activeCount: 0,
+        completeCount: 0,
+        visibleActiveIDs: [],
+        visibleCompletedIDs: [],
+      },
       error: undefined,
       isLoading: false,
       isFetching: false,

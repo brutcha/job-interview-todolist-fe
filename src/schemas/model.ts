@@ -15,6 +15,14 @@ export type DebouncedCallError = ConcurrentCallBlocked | CallFailed;
 export const FilterSchema = Schema.Literal("all", "active", "completed");
 export type Filter = typeof FilterSchema.Type;
 
+export const RequestTypeSchema = Schema.Literal(
+  "CREATE",
+  "READ",
+  "UPDATE",
+  "DELETE",
+);
+export type RequestType = typeof RequestTypeSchema.Type;
+
 export const SetFilterActionSchema = Schema.Struct({
   type: Schema.Literal(userStateSlice.actions.setFilter.type),
   payload: FilterSchema,

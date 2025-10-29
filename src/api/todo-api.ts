@@ -22,6 +22,12 @@ import {
 } from "@/schemas/api";
 import { userStateSlice } from "@/store/user-state-slice";
 
+const TAG = "Task" as const;
+
+interface RTKQueryDispatch {
+  <T>(action: T): T extends (...args: never[]) => infer R ? R : T;
+}
+
 export const minDelayQueryFn = <TArgs, TResult, TEncoded = TResult>(
   query: (args: TArgs) => string | FetchArgs,
   responseSchema: Schema.Schema<TResult, TEncoded, never>,
@@ -84,9 +90,9 @@ export const minDelayQueryFn = <TArgs, TResult, TEncoded = TResult>(
   };
 };
 
-export const handleTaskUpdate = async <T extends (action: unknown) => unknown>(
+export const handleTaskUpdate = async (
   taskID: TaskID,
-  dispatch: T,
+  dispatch: RTKQueryDispatch,
   queryFulfilled: Promise<{ data: Task }>,
   options?: { clearEditingTask?: boolean },
 ) => {
@@ -106,9 +112,9 @@ export const handleTaskUpdate = async <T extends (action: unknown) => unknown>(
   }
 };
 
-export const handleTaskDelete = async <T extends (action: unknown) => unknown>(
+export const handleTaskDelete = async (
   taskID: TaskID,
-  dispatch: T,
+  dispatch: RTKQueryDispatch,
   queryFulfilled: Promise<unknown>,
 ) => {
   await queryFulfilled;
@@ -122,8 +128,8 @@ export const handleTaskDelete = async <T extends (action: unknown) => unknown>(
   );
 };
 
-export const handleTaskCreate = async <T extends (action: unknown) => unknown>(
-  dispatch: T,
+export const handleTaskCreate = async (
+  dispatch: RTKQueryDispatch,
   queryFulfilled: Promise<{ data: Task }>,
 ) => {
   const { data } = await queryFulfilled;
@@ -143,11 +149,23 @@ export const todoApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: parseBaseURL(),
   }),
-  tagTypes: ["Task"],
+  tagTypes: [TAG],
   endpoints(build) {
     return {
       getTasks: build.query<GetTasksResponse, void>({
         queryFn: minDelayQueryFn(() => "/tasks", GetTasksResponseSchema),
+        providesTags(result) {
+          return result
+            ? [
+                TAG,
+                { type: "Task", id: "LIST" },
+                ...result.map(({ id }) => ({
+                  type: TAG,
+                  id,
+                })),
+              ]
+            : [];
+        },
       }),
       createTask: build.mutation<Task, CreateTaskRequest>({
         queryFn: minDelayQueryFn(
