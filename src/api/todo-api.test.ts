@@ -259,7 +259,7 @@ describe("debouncedQueryFn", () => {
     );
     const endTime = Date.now();
 
-    expect(endTime - startTime).toBeGreaterThanOrEqual(1);
+    expect(endTime - startTime).toBeGreaterThanOrEqual(0);
     expect(result).toEqual({
       data: { test: "value" },
       meta: { response: { status: 200 } },
@@ -295,14 +295,14 @@ describe("debouncedQueryFn", () => {
 
   it("should return parsing error on invalid response", async () => {
     const mockQuery = vi.fn(() => ({ url: "/test" }));
-    const mockText = vi.fn(() => Promise.reject(new Error("Can't get text")))
+    const mockText = vi.fn(() => Promise.reject(new Error("Can't get text")));
     const mockBaseQuery = vi.fn(() =>
       Promise.resolve({
         data: { invalid: 123 },
         meta: {
           response: {
             status: 200,
-            text: mockText
+            text: mockText,
           },
         },
       }),

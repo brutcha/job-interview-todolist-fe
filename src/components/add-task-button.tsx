@@ -16,7 +16,7 @@ export const AddTaskButton = () => {
   return (
     <Button
       onClick={onClick}
-      className="fixed bottom-2 right-2 rounded-lg h-14 w-14 md:h-12 md:w-auto md:px-4 md:static md:bottom-auto md:right-auto"
+      className="fixed bottom-24 right-4 rounded-lg h-14 w-14 md:h-12 md:w-auto md:px-4 md:static md:bottom-auto md:right-auto"
     >
       <PlusIcon aria-hidden />
       <span className="max-md:sr-only">Add new task</span>

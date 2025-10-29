@@ -207,7 +207,7 @@ export const todoApi = createApi({
       deleteTask: build.mutation<void, TaskID>({
         queryFn: minDelayQueryFn(
           (taskID) => ({
-            url: `tasks/${taskID}`,
+            url: `/tasks/${taskID}`,
             method: "DELETE",
           }),
           Schema.Void,

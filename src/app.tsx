@@ -1,10 +1,14 @@
 import { useSelector } from "react-redux";
 
-import { AddTaskButton } from "./components/add-task-button";
-import { TaskList } from "./components/task-list";
-import type { State } from "./store/store";
+import { AddTaskButton } from "@/components/add-task-button";
+import { TaskList } from "@/components/task-list";
+
+import { useUrlSync } from "@/hooks/use-url-sync";
+import type { State } from "@/store/store";
 
 export const App = () => {
+  useUrlSync();
+
   const shouldShowAddButton = useSelector(
     (state: State) => typeof state.userState.newTaskText !== "string",
   );
