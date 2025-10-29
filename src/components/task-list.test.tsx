@@ -13,7 +13,12 @@ vi.mock("react-redux", async () => {
   const actual = await vi.importActual("react-redux");
   return {
     ...actual,
-    useSelector: vi.fn(() => false),
+    useSelector: vi.fn((selector) =>
+      selector({
+        userState: { newTaskText: null, filter: "all" },
+      }),
+    ),
+    useDispatch: vi.fn(() => vi.fn()),
   };
 });
 
@@ -93,6 +98,10 @@ vi.mock("@/components/skeleton-task-card", () => ({
 
 vi.mock("@/components/new-task-card", () => ({
   NewTaskCard: () => <div data-testid="new-task-card">New Task</div>,
+}));
+
+vi.mock("@/components/task-filter", () => ({
+  TasksFilter: () => <div data-testid="tasks-filter">Filter</div>,
 }));
 
 vi.mock("lucide-react", () => ({
@@ -284,7 +293,11 @@ describe("TaskList", () => {
   it("should not show NewTaskCard when newTaskText is not a string", async () => {
     const { todoApi } = await import("@/api/todo-api");
     const reactRedux = await import("react-redux");
-    vi.mocked(reactRedux.useSelector).mockReturnValue(false);
+    vi.mocked(reactRedux.useSelector).mockImplementation((selector) =>
+      selector({
+        userState: { newTaskText: null, filter: "all" },
+      }),
+    );
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
       data: [],
@@ -303,7 +316,11 @@ describe("TaskList", () => {
   it("should show NewTaskCard when newTaskText is a string", async () => {
     const { todoApi } = await import("@/api/todo-api");
     const reactRedux = await import("react-redux");
-    vi.mocked(reactRedux.useSelector).mockReturnValue(true);
+    vi.mocked(reactRedux.useSelector).mockImplementation((selector) =>
+      selector({
+        userState: { newTaskText: "test", filter: "all" },
+      }),
+    );
 
     (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
       data: [],
@@ -317,5 +334,99 @@ describe("TaskList", () => {
 
     const newTaskCard = screen.getByTestId("new-task-card");
     expect(newTaskCard).toBeDefined();
+  });
+
+  it("should filter active tasks", async () => {
+    const { todoApi } = await import("@/api/todo-api");
+    const reactRedux = await import("react-redux");
+    vi.mocked(reactRedux.useSelector).mockImplementation((selector) =>
+      selector({
+        userState: { newTaskText: null, filter: "active" },
+      }),
+    );
+
+    const mockTasks = [
+      {
+        id: "task_01234567890123456789012",
+        text: "Active task",
+        completed: false,
+        createdDate: 1234567890,
+        completedDate: undefined,
+      },
+      {
+        id: "task_01234567890123456789013",
+        text: "Completed task",
+        completed: true,
+        createdDate: 1234567891,
+        completedDate: 1234567892,
+      },
+    ];
+
+    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockImplementation(
+      (_arg, options) => {
+        const baseResult = {
+          data: mockTasks,
+          error: undefined,
+          isLoading: false,
+          isFetching: false,
+          refetch: vi.fn(),
+        };
+        return options?.selectFromResult
+          ? options.selectFromResult(baseResult)
+          : baseResult;
+      },
+    );
+
+    render(<TaskList />);
+
+    expect(screen.getByText("Active task")).toBeDefined();
+    expect(screen.queryByText("Completed task")).toBeNull();
+  });
+
+  it("should filter completed tasks", async () => {
+    const { todoApi } = await import("@/api/todo-api");
+    const reactRedux = await import("react-redux");
+    vi.mocked(reactRedux.useSelector).mockImplementation((selector) =>
+      selector({
+        userState: { newTaskText: null, filter: "completed" },
+      }),
+    );
+
+    const mockTasks = [
+      {
+        id: "task_01234567890123456789012",
+        text: "Active task",
+        completed: false,
+        createdDate: 1234567890,
+        completedDate: undefined,
+      },
+      {
+        id: "task_01234567890123456789013",
+        text: "Completed task",
+        completed: true,
+        createdDate: 1234567891,
+        completedDate: 1234567892,
+      },
+    ];
+
+    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockImplementation(
+      (_arg, options) => {
+        const baseResult = {
+          data: mockTasks,
+          error: undefined,
+          isLoading: false,
+          isFetching: false,
+          refetch: vi.fn(),
+        };
+        return options?.selectFromResult
+          ? options.selectFromResult(baseResult)
+          : baseResult;
+      },
+    );
+
+    render(<TaskList />);
+
+    expect(screen.queryByText("Active task")).toBeNull();
+    expect(screen.getByText("Completed task")).toBeDefined();
   });
 });

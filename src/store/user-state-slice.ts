@@ -1,8 +1,7 @@
 import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 import { type TaskID } from "@/schemas/api";
-
-type Filter = "all" | "active" | "completed";
+import type { Filter } from "@/schemas/model";
 
 interface UserState {
   filter: Filter;

@@ -179,13 +179,6 @@ See [ADR-0005](adr/0005-testing.md) for details.
 - Live URL: `https://<username>.github.io/job-interview-todolist-fe/`
 - Environment: Backend API URL via GitHub secret
 
-**Configuration:**
-
-```typescript
-// vite.config.ts
-base: "/job-interview-todolist-fe/";
-```
-
 See [ADR-0008](adr/0008-scope-future.md) for deployment strategy.
 
 ## Environment Variables
