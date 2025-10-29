@@ -25,33 +25,34 @@ export const TasksFilter = () => {
         "md:justify-start md:bg-muted",
       )}
     >
-      <label htmlFor="tasks-filter" className="hidden md:block">
-        Filter by:
-      </label>
-      <ToggleGroup
-        id="tasks-filter"
-        type="single"
-        variant="outline"
-        size="lg"
-        value={value}
-        onValueChange={onChange}
-      >
-        <ToggleGroupItem value="all" className="bg-card min-w-27 md:min-w-16">
-          All
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="active"
-          className="bg-card min-w-27 md:min-w-16"
+      <fieldset className="flex flex-row gap-2 items-center">
+        <legend className="hidden md:inline-block md:float-left">
+          Filter by:
+        </legend>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          size="lg"
+          value={value}
+          onValueChange={onChange}
         >
-          Active
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="completed"
-          className="bg-card min-w-27 md:min-w-16"
-        >
-          Completed
-        </ToggleGroupItem>
-      </ToggleGroup>
+          <ToggleGroupItem value="all" className="bg-card min-w-27 md:min-w-16">
+            All
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="active"
+            className="bg-card min-w-27 md:min-w-16"
+          >
+            Active
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="completed"
+            className="bg-card min-w-27 md:min-w-16"
+          >
+            Completed
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </fieldset>
     </TaskItem>
   );
 };
