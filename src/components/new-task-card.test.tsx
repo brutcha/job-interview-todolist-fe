@@ -78,7 +78,7 @@ describe("NewTaskCard", () => {
       </Provider>,
     );
 
-    const input = screen.getByPlaceholderText(/what needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to be done/i);
     expect(input).toBeDefined();
   });
 
@@ -91,7 +91,7 @@ describe("NewTaskCard", () => {
       </Provider>,
     );
 
-    const input = screen.getByPlaceholderText(/what needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to be done/i);
 
     await waitFor(async () => {
       await user.type(input, "New task");
@@ -177,7 +177,7 @@ describe("NewTaskCard", () => {
       store.dispatch(userStateSlice.actions.editNewTask("Task on blur"));
     });
 
-    const input = screen.getByPlaceholderText(/what needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to be done/i);
     input.blur();
 
     await waitFor(() => {
@@ -203,7 +203,7 @@ describe("NewTaskCard", () => {
 
     act(() => {
       store.dispatch(userStateSlice.actions.editNewTask(""));
-      const input = screen.getByPlaceholderText(/what needs to bee done/i);
+      const input = screen.getByPlaceholderText(/what needs to be done/i);
       input.blur();
     });
 
@@ -320,7 +320,7 @@ describe("NewTaskCard", () => {
       store.dispatch(userStateSlice.actions.editNewTask("Test"));
     });
 
-    const input = screen.getByPlaceholderText(/what needs to bee done/i);
+    const input = screen.getByPlaceholderText(/what needs to be done/i);
     await user.clear(input);
 
     await waitFor(() => {

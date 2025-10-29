@@ -14,12 +14,21 @@ export const useUrlSync = (urlHelpers: URLHelpers = defaultURLHelpers) => {
   const filter = useSelector((state: State) => state.userState.filter);
 
   useEffect(() => {
-    const filterParam = urlHelpers.getSearchParam("filter");
-    const validatedFilter =
-      Schema.decodeUnknownOption(FilterSchema)(filterParam);
+    const syncURL = () => {
+      const filterParam = urlHelpers.getSearchParam("filter");
+      const validatedFilter =
+        Schema.decodeUnknownOption(FilterSchema)(filterParam);
 
-    if (Option.isSome(validatedFilter) && validatedFilter.value !== filter) {
-      dispatch(userStateSlice.actions.setFilter(validatedFilter.value));
-    }
+      if (Option.isSome(validatedFilter) && validatedFilter.value !== filter) {
+        dispatch(userStateSlice.actions.setFilter(validatedFilter.value));
+      }
+    };
+
+    syncURL();
+    window.addEventListener("popstate", syncURL);
+
+    return () => {
+      window.removeEventListener("popstate", syncURL);
+    };
   }, [dispatch, urlHelpers, filter]);
 };

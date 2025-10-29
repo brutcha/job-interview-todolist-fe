@@ -1,10 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
 
+import { Option, Schema } from "effect";
+
 import { TaskItem } from "@/components/task-item";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { cn } from "@/lib/utils";
-import type { Filter } from "@/schemas/model";
+import { FilterSchema } from "@/schemas/model";
 import type { State } from "@/store/store";
 import { userStateSlice } from "@/store/user-state-slice";
 
@@ -12,8 +14,12 @@ export const TasksFilter = () => {
   const value = useSelector((state: State) => state.userState.filter);
   const dispatch = useDispatch();
 
-  const onChange = (value: Filter) => {
-    dispatch(userStateSlice.actions.setFilter(value));
+  const onChange = (value: string) => {
+    const validatedValue = Schema.validateOption(FilterSchema)(value);
+
+    if (Option.isSome(validatedValue)) {
+      dispatch(userStateSlice.actions.setFilter(validatedValue.value));
+    }
   };
 
   return (

@@ -3,12 +3,26 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Filter } from "@/schemas/model";
 import { userStateSlice } from "@/store/user-state-slice";
 
 import { TasksFilter } from "./task-filter";
+
+let mockOnValueChange: ((value: string) => void) | undefined;
+
+vi.mock("@/components/ui/toggle-group", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/components/ui/toggle-group")>();
+  return {
+    ...actual,
+    ToggleGroup: (props: Parameters<typeof actual.ToggleGroup>[0]) => {
+      mockOnValueChange = props.onValueChange as (value: string) => void;
+      return actual.ToggleGroup(props);
+    },
+  };
+});
 
 const createTestStore = (initialFilter: Filter = "all") => {
   return configureStore({
@@ -25,6 +39,10 @@ const createTestStore = (initialFilter: Filter = "all") => {
     },
   });
 };
+
+beforeEach(() => {
+  mockOnValueChange = undefined;
+});
 
 describe("TasksFilter", () => {
   it("should render all filter options", () => {
@@ -98,5 +116,21 @@ describe("TasksFilter", () => {
     expect(
       screen.getByRole("radio", { name: "All" }).getAttribute("data-state"),
     ).toBe("off");
+  });
+
+  it("should not dispatch setFilter action when invalid filter value is provided", () => {
+    const store = createTestStore();
+
+    render(
+      <Provider store={store}>
+        <TasksFilter />
+      </Provider>,
+    );
+
+    if (mockOnValueChange) {
+      mockOnValueChange("invalid-filter-value");
+    }
+
+    expect(store.getState().userState.filter).toBe("all");
   });
 });
