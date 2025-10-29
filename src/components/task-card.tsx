@@ -1,9 +1,7 @@
 import { type ChangeEvent, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { Either } from "effect";
 import {
-  BrushCleaningIcon,
   PencilIcon,
   SendHorizontalIcon,
   SquareCheckBigIcon,
@@ -14,34 +12,36 @@ import {
 import { toast } from "sonner";
 
 import { ScreenReader } from "@/components/screen-reader";
-import { Button } from "@/components/ui/button";
+import { TaskButton } from "@/components/task-button";
+import { TaskIcon } from "@/components/task-icon";
+import {
+  TaskInputGroup,
+  TaskInputGroupButtonAddon,
+  TaskInputGroupIconAddon,
+  TaskInputGroupInput,
+} from "@/components/task-input-item";
+import { TaskItem } from "@/components/task-item";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
-  Item,
   ItemActions,
   ItemContent,
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 
 import { todoApi } from "@/api/todo-api";
-import { useDebouncedMutation } from "@/hooks/use-debounced-mutation";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/schemas/api";
-import { CallFailed } from "@/schemas/model";
 import type { State } from "@/store/store";
 import { userStateSlice } from "@/store/user-state-slice";
 
-import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
-
-interface TaskListItemProps {
+interface TaskCardProps {
   task: Task;
   isFetching: boolean;
 }
 
-export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
+export const TaskCard = ({ task, isFetching }: TaskCardProps) => {
   const editingTaskID = useSelector(
     (state: State) => state.userState.editingTaskID,
   );
@@ -52,19 +52,14 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { id, text, completed } = task;
 
-  const [completeTask, { isLoading: isCompleting }] = useDebouncedMutation(
-    todoApi.useCompleteTaskMutation,
-  );
-  const [incompleteTask, { isLoading: isIncompleting }] = useDebouncedMutation(
-    todoApi.useIncompleteTaskMutation,
-  );
-  const [deleteTask, { isLoading: isDeleting }] = useDebouncedMutation(
-    todoApi.useDeleteTaskMutation,
-  );
-  const [updateTask, { isLoading: isSubmitting }] = useDebouncedMutation(
-    todoApi.useUpdateTaskMutation,
-    { blocking: true },
-  );
+  const [completeTask, { isLoading: isCompleting }] =
+    todoApi.useCompleteTaskMutation();
+  const [incompleteTask, { isLoading: isIncompleting }] =
+    todoApi.useIncompleteTaskMutation();
+  const [deleteTask, { isLoading: isDeleting }] =
+    todoApi.useDeleteTaskMutation();
+  const [updateTask, { isLoading: isSubmitting }] =
+    todoApi.useUpdateTaskMutation();
 
   const isBusy =
     isFetching || isCompleting || isIncompleting || isDeleting || isSubmitting;
@@ -82,7 +77,6 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
     }
     return null;
   })();
-
   const CheckboxIcon = (() => {
     if (isCompleting || isIncompleting) {
       return Spinner;
@@ -92,53 +86,25 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
     }
     return SquareIcon;
   })();
-
-  const DeleteIcon = (() => {
-    if (isDeleting) {
-      return Spinner;
-    }
-    return Trash2Icon;
-  })();
-
-  const SubmitIcon = (() => {
-    if (isSubmitting) {
-      return Spinner;
-    }
-    return SendHorizontalIcon;
-  })();
+  const DeleteIcon = isDeleting ? Spinner : Trash2Icon;
+  const SubmitIcon = isSubmitting ? Spinner : SendHorizontalIcon;
 
   const onCheckedChange = async () => {
-    const result = completed
-      ? await incompleteTask(id)
-      : await completeTask(id);
-
-    Either.match(result, {
-      onLeft: (error) => {
-        if (error instanceof CallFailed) {
-          toast.error("Failed to update task");
-        }
-      },
-      onRight: () => {
-        toast.success(
-          completed ? "Task marked as incomplete" : "Task completed",
-        );
-      },
-    });
+    try {
+      await (completed ? incompleteTask(id) : completeTask(id)).unwrap();
+      toast.success(completed ? "Task marked as incomplete" : "Task completed");
+    } catch {
+      toast.error("Failed to update task");
+    }
   };
 
   const onDelete = async () => {
-    const result = await deleteTask(id);
-
-    Either.match(result, {
-      onLeft: (error) => {
-        if (error instanceof CallFailed) {
-          toast.error("Failed to delete task");
-        }
-      },
-      onRight: () => {
-        toast.success("Task deleted");
-      },
-    });
+    try {
+      await deleteTask(id).unwrap();
+      toast.success("Task deleted");
+    } catch {
+      toast.error("Failed to delete task");
+    }
   };
 
   const onEditToggle = () => {
@@ -158,23 +124,21 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
   };
 
   const onSubmit = async () => {
-    if (inputValue === text) {
+    const value = inputRef.current?.value ?? inputValue;
+    if (!value) {
+      return;
+    }
+    if (value === text) {
       dispatch(userStateSlice.actions.clearEditingTask());
       return;
     }
 
-    const result = await updateTask([id, { text: inputValue ?? "" }]);
-
-    Either.match(result, {
-      onLeft: (error) => {
-        if (error instanceof CallFailed) {
-          toast.error("Failed to update task");
-        }
-      },
-      onRight: () => {
-        toast.success("Task updated");
-      },
-    });
+    try {
+      await updateTask([id, { text: value }]).unwrap();
+      toast.success("Task updated");
+    } catch {
+      toast.error("Failed to update task");
+    }
   };
 
   return (
@@ -182,7 +146,7 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
       {/* Screen reader announcement for actions */}
       {statusMessage && <ScreenReader>{statusMessage}</ScreenReader>}
 
-      <Item
+      <TaskItem
         variant={isBusy ? "muted" : "outline"}
         aria-busy={isBusy}
         className={cn("bg-card shadow-sm", isEditing && "p-0")}
@@ -190,7 +154,7 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
         {!isEditing && (
           <>
             <ItemMedia>
-              <Button
+              <TaskButton
                 id={id}
                 variant="ghost"
                 size="icon"
@@ -201,8 +165,8 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
                 aria-label={`Mark "${text}" as ${completed ? "incomplete" : "complete"}`}
                 onClick={onCheckedChange}
               >
-                <CheckboxIcon aria-hidden className="size-6" />
-              </Button>
+                <CheckboxIcon />
+              </TaskButton>
             </ItemMedia>
             <ItemContent>
               <ItemTitle>{text}</ItemTitle>
@@ -210,28 +174,24 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
             <ItemActions>
               <ButtonGroup className="-my-2">
                 {!isEditing && (
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
+                  <TaskButton
                     onClick={onDelete}
                     disabled={isBusy}
                     aria-label="Delete Task"
                     aria-busy={isBusy}
                   >
-                    <DeleteIcon aria-hidden className="size-6" />
-                  </Button>
+                    <DeleteIcon />
+                  </TaskButton>
                 )}
                 {!isEditing && (
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
+                  <TaskButton
                     onClick={onEditToggle}
                     disabled={isBusy}
                     aria-label="Edit Task"
                     aria-busy={isBusy}
                   >
-                    <PencilIcon aria-hidden className="size-6" />
-                  </Button>
+                    <PencilIcon />
+                  </TaskButton>
                 )}
               </ButtonGroup>
             </ItemActions>
@@ -239,69 +199,38 @@ export const TaskListItem = ({ task, isFetching }: TaskListItemProps) => {
         )}
         {isEditing && (
           <ItemContent>
-            <InputGroup className="group border-none shadow-none h-19">
-              <InputGroupInput
+            <TaskInputGroup className="group">
+              <TaskInputGroupInput
                 ref={inputRef}
                 type="text"
                 value={inputValue ?? text}
                 onChange={onInputChange}
                 onBlur={onSubmit}
-                className="font-medium border-none shadow-none -mt-0.5"
               />
-              <InputGroupAddon aria-hidden>
-                <div className="w-13 mr-1 flex justify-center">
-                  <SquarePenIcon className="size-6 text-primary" />
-                </div>
-              </InputGroupAddon>
-              <InputGroupAddon align="inline-end">
-                <Button
-                  variant="outline"
-                  size="icon-lg"
+              <TaskInputGroupIconAddon>
+                <TaskIcon variant="foreground">
+                  <SquarePenIcon />
+                </TaskIcon>
+              </TaskInputGroupIconAddon>
+              <TaskInputGroupButtonAddon>
+                <TaskButton
                   onClick={onSubmit}
                   disabled={isBusy}
                   aria-label="Update Task"
                   aria-busy={isBusy}
-                  className="mx-2"
+                  className={cn(
+                    "group-focus-within:bg-primary",
+                    "group-focus-within:border-primary",
+                    "group-focus-within:hover:bg-primary/90",
+                  )}
                 >
-                  <SubmitIcon aria-hidden className="size-6 text-foreground" />
-                </Button>
-              </InputGroupAddon>
-            </InputGroup>
+                  <SubmitIcon className="group-focus-within:text-primary-foreground" />
+                </TaskButton>
+              </TaskInputGroupButtonAddon>
+            </TaskInputGroup>
           </ItemContent>
         )}
-      </Item>
+      </TaskItem>
     </>
-  );
-};
-
-interface SkeletonTaskListItemProps {
-  className?: string;
-}
-
-export const SkeletonTaskListItem = ({
-  className,
-}: SkeletonTaskListItemProps) => {
-  return (
-    <Item
-      variant="outline"
-      className={cn("bg-card shadow-sm", className)}
-      aria-hidden
-      aria-busy
-    >
-      <ItemContent>
-        <Skeleton className="w-full h-9" />
-      </ItemContent>
-    </Item>
-  );
-};
-
-export const EmptyTaskListItem = () => {
-  return (
-    <Item variant="muted" className="shadow-sm">
-      <ItemMedia aria-hidden>
-        <BrushCleaningIcon />
-      </ItemMedia>
-      <ItemContent>You have no tasks.</ItemContent>
-    </Item>
   );
 };

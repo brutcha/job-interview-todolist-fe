@@ -1,6 +1,14 @@
+import { useSelector } from "react-redux";
+
+import { AddTaskButton } from "./components/add-task-button";
 import { TaskList } from "./components/task-list";
+import type { State } from "./store/store";
 
 export const App = () => {
+  const shouldShowAddButton = useSelector(
+    (state: State) => typeof state.userState.newTaskText !== "string",
+  );
+
   return (
     <>
       <a
@@ -13,7 +21,11 @@ export const App = () => {
         id="main"
         className="flex flex-col container min-w-90 max-sm:px-2 sm:mx-auto gap-8"
       >
-        <h1 className="text-3xl font-semibold mx-auto mt-8">My Tasks</h1>
+        <div className="flex justify-between items-center mt-8 px-4">
+          <h1 className="text-3xl font-semibold">My Tasks</h1>
+          {shouldShowAddButton && <AddTaskButton />}
+        </div>
+
         <TaskList />
       </main>
     </>

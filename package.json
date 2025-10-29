@@ -17,7 +17,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --run --coverage",
     "test:ui": "vitest --run --ui",
-    "typecheck": "tsc --noEmit --project ./tsconfig.json"
+    "typecheck": "tsc --noEmit --project ./tsconfig.app.json"
   },
   "dependencies": {
     "@radix-ui/react-separator": "^1.1.7",

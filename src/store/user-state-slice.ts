@@ -8,12 +8,14 @@ interface UserState {
   filter: Filter;
   editingTaskID: TaskID | null;
   editingTaskText: string | null;
+  newTaskText: string | null;
 }
 
 export const initialState: UserState = {
   filter: "all",
   editingTaskID: null,
   editingTaskText: null,
+  newTaskText: null,
 };
 
 export const userStateSlice = createSlice({
@@ -33,6 +35,12 @@ export const userStateSlice = createSlice({
     clearEditingTask(state) {
       state.editingTaskID = null;
       state.editingTaskText = null;
+    },
+    editNewTask(state, { payload }: PayloadAction<string>) {
+      state.newTaskText = payload;
+    },
+    clearNewTask(state) {
+      state.newTaskText = null;
     },
   },
 });
