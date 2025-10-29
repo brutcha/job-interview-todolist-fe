@@ -46,7 +46,9 @@ export const NewTaskCard = () => {
 
   const onBlur = () => {
     if (value) {
-      onAdd();
+      requestAnimationFrame(() => {
+        onAdd();
+      });
     } else {
       dispatch(userStateSlice.actions.clearNewTask());
     }

@@ -65,7 +65,13 @@ export const minDelayQueryFn = <TArgs, TResult, TEncoded = TResult>(
               status: "PARSING_ERROR",
               originalStatus: result.meta?.response?.status ?? 200,
               error: String(error),
-              data: (await result.meta?.response?.text()) ?? "",
+              data: await (async () => {
+                try {
+                  return (await result.meta?.response?.clone()?.text()) ?? "";
+                } catch {
+                  return "";
+                }
+              })(),
             } satisfies FetchBaseQueryError,
             meta: result.meta,
           };

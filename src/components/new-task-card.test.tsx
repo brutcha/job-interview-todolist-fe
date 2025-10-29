@@ -180,7 +180,9 @@ describe("NewTaskCard", () => {
     const input = screen.getByPlaceholderText(/what needs to bee done/i);
     input.blur();
 
-    expect(mockCreateTask).toBeCalledWith({ text: "Task on blur" });
+    await waitFor(() => {
+      expect(mockCreateTask).toBeCalledWith({ text: "Task on blur" });
+    });
   });
 
   it("should clear newTask on blur with empty value", async () => {

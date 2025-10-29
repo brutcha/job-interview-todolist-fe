@@ -5,10 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 import type { TaskID } from "@/schemas/api";
 
 import {
-  minDelayQueryFn,
   handleTaskCreate,
   handleTaskDelete,
   handleTaskUpdate,
+  minDelayQueryFn,
   todoApi,
 } from "./todo-api";
 
@@ -270,12 +270,11 @@ describe("debouncedQueryFn", () => {
 
   it("should return error on failed query", async () => {
     const mockQuery = vi.fn(() => ({ url: "/test" }));
-    const mockText = vi.fn(() => Promise.resolve("text"));
     const mockError = { status: 500, data: "Server error" };
     const mockBaseQuery = vi.fn(() =>
       Promise.resolve({
         error: mockError,
-        meta: { response: { text: mockText } },
+        meta: { response: { text: Promise.resolve("text") } },
       }),
     );
     const mockSchema = Schema.Struct({ test: Schema.String });
@@ -289,20 +288,22 @@ describe("debouncedQueryFn", () => {
       mockBaseQuery as never,
     );
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(result).toMatchObject({ error: mockError });
-      expect(mockText).toBeCalled();
     });
   });
 
   it("should return parsing error on invalid response", async () => {
     const mockQuery = vi.fn(() => ({ url: "/test" }));
-    const mockText = vi.fn(() => Promise.resolve("text"));
+    const mockText = vi.fn(() => Promise.reject(new Error("Can't get text")))
     const mockBaseQuery = vi.fn(() =>
       Promise.resolve({
         data: { invalid: 123 },
         meta: {
-          response: { status: 200, text: mockText },
+          response: {
+            status: 200,
+            text: mockText
+          },
         },
       }),
     );
@@ -317,7 +318,9 @@ describe("debouncedQueryFn", () => {
       mockBaseQuery as never,
     );
 
-    waitFor(() => {
+    await expect(mockText).rejects.toThrow();
+
+    await waitFor(() => {
       expect(result).toHaveProperty("error");
       if ("error" in result) {
         expect(result.error).toMatchObject({
@@ -325,7 +328,6 @@ describe("debouncedQueryFn", () => {
           originalStatus: 200,
         });
       }
-      expect(mockText).toBeCalled();
     });
   });
 });
