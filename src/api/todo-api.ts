@@ -155,16 +155,18 @@ export const todoApi = createApi({
       getTasks: build.query<GetTasksResponse, void>({
         queryFn: minDelayQueryFn(() => "/tasks", GetTasksResponseSchema),
         providesTags(result) {
-          return result
-            ? [
-                TAG,
-                { type: "Task", id: "LIST" },
-                ...result.map(({ id }) => ({
-                  type: TAG,
-                  id,
-                })),
-              ]
-            : [];
+          if (!result) {
+            return [TAG, { type: TAG, id: "LIST" }];
+          }
+
+          return [
+            TAG,
+            { type: TAG, id: "LIST" },
+            ...result.map(({ id }) => ({
+              type: TAG,
+              id,
+            })),
+          ];
         },
       }),
       createTask: build.mutation<Task, CreateTaskRequest>({
