@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { TasksActions } from "./tasks-actions";
+import type { TaskID } from "@/schemas/api";
 
 // Mock all external dependencies at the top level
 vi.mock("@/api/todo-api", () => ({
@@ -98,23 +99,6 @@ vi.mock("lucide-react", () => ({
   XIcon: () => <div data-testid="x-icon">X</div>,
 }));
 
-describe("TasksActions", () => {
-  it("should render nothing when no tasks are visible", () => {
-    const { container } = render(
-      <TasksActions visibleActiveIDs={[]} visibleCompletedIDs={[]} />,
-    );
-
-    expect(container.querySelector('[data-testid="check-icon"]')).toBeNull();
-    expect(container.querySelector('[data-testid="x-icon"]')).toBeNull();
-    expect(container.querySelector('[data-testid="spinner"]')).toBeNull();
-  });
-
-  it("should render complete all button when there are active tasks", () => {
-    render(
-      <TasksActions
-import type { TaskID } from "@/schemas/api";
-import { TasksActions } from "./tasks-actions";
-
 const asTaskIDs = (...ids: string[]): TaskID[] =>
   ids.map((id) => id as TaskID);
 
@@ -203,9 +187,6 @@ describe("TasksActions", () => {
       <TasksActions
         visibleActiveIDs={asTaskIDs("task1")}
         visibleCompletedIDs={asTaskIDs("task2")}
-      />,
-    );
-        isLoading={true}
       />,
     );
 

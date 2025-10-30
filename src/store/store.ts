@@ -23,13 +23,13 @@ export type State = ReturnType<typeof store.getState>;
 export type Dispatch = ReturnType<typeof store.dispatch>;
 
 export const selectRunningOperations = (state: State) =>
-  Object.entries(state.todoApi.mutations).reduce(
-    (runningMutations: Record<RequestType, number>, [key, mutationState]) => {
+  Object.values(state.todoApi.mutations).reduce(
+    (runningMutations: Record<RequestType, number>, mutationState) => {
       if (!mutationState || mutationState.status !== "pending") {
         return runningMutations;
       }
 
-      switch (key) {
+      switch (mutationState?.endpointName) {
         case "createTask":
           return {
             ...runningMutations,
