@@ -112,7 +112,17 @@ describe("TasksActions", () => {
   it("should render complete all button when there are active tasks", () => {
     render(
       <TasksActions
-        visibleActiveIDs={["task1", "task2"] as any}
+import type { TaskID } from "@/schemas/api";
+import { TasksActions } from "./tasks-actions";
+
+const asTaskIDs = (...ids: string[]): TaskID[] =>
+  ids.map((id) => id as TaskID);
+
+describe("TasksActions", () => {
+  it("should render check button when there are active tasks", () => {
+    render(
+      <TasksActions
+        visibleActiveIDs={asTaskIDs("task1", "task2")}
         visibleCompletedIDs={[]}
       />,
     );
@@ -126,7 +136,7 @@ describe("TasksActions", () => {
     render(
       <TasksActions
         visibleActiveIDs={[]}
-        visibleCompletedIDs={["task1", "task2", "task3"] as any}
+        visibleCompletedIDs={asTaskIDs("task1", "task2", "task3")}
       />,
     );
 
@@ -138,8 +148,8 @@ describe("TasksActions", () => {
   it("should render both buttons when there are both active and completed tasks", () => {
     render(
       <TasksActions
-        visibleActiveIDs={["task1"] as any}
-        visibleCompletedIDs={["task2"] as any}
+        visibleActiveIDs={asTaskIDs("task1")}
+        visibleCompletedIDs={asTaskIDs("task2")}
       />,
     );
 
@@ -152,8 +162,8 @@ describe("TasksActions", () => {
   it("should disable buttons when loading via prop", () => {
     render(
       <TasksActions
-        visibleActiveIDs={["task1"] as any}
-        visibleCompletedIDs={["task2"] as any}
+        visibleActiveIDs={asTaskIDs("task1")}
+        visibleCompletedIDs={asTaskIDs("task2")}
         isLoading={true}
       />,
     );
@@ -168,8 +178,8 @@ describe("TasksActions", () => {
   it("should show spinner when loading via prop", () => {
     render(
       <TasksActions
-        visibleActiveIDs={["task1"] as any}
-        visibleCompletedIDs={["task2"] as any}
+        visibleActiveIDs={asTaskIDs("task1")}
+        visibleCompletedIDs={asTaskIDs("task2")}
         isLoading={true}
       />,
     );
@@ -180,8 +190,8 @@ describe("TasksActions", () => {
   it("should not show spinner when not loading", () => {
     render(
       <TasksActions
-        visibleActiveIDs={["task1"] as any}
-        visibleCompletedIDs={["task2"] as any}
+        visibleActiveIDs={asTaskIDs("task1")}
+        visibleCompletedIDs={asTaskIDs("task2")}
       />,
     );
 
@@ -191,8 +201,10 @@ describe("TasksActions", () => {
   it("should render screen reader element", () => {
     render(
       <TasksActions
-        visibleActiveIDs={["task1"] as any}
-        visibleCompletedIDs={["task2"] as any}
+        visibleActiveIDs={asTaskIDs("task1")}
+        visibleCompletedIDs={asTaskIDs("task2")}
+      />,
+    );
         isLoading={true}
       />,
     );
