@@ -5,9 +5,6 @@ docs/*assignment*.pdf
 # Dependencies
 node_modules/
 
-# Package manager
-pnpm-lock.yaml
-
 # Logs
 *.log
 
