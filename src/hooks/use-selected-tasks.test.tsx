@@ -47,33 +47,56 @@ describe("useSelectedTasks", () => {
     vi.clearAllMocks();
   });
 
-  it("should return undefined data when tasks is undefined", async () => {
+  it("should return empty data when tasks is undefined", async () => {
     const { todoApi } = await import("@/api/todo-api");
-    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: undefined,
-      error: undefined,
-      isLoading: true,
-      isFetching: false,
-      refetch: vi.fn(),
-    });
+    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockImplementation(
+      (_arg, options) => {
+        const baseResult = {
+          data: undefined,
+          error: undefined,
+          isLoading: true,
+          isFetching: false,
+          refetch: vi.fn(),
+        };
+        return options?.selectFromResult
+          ? options.selectFromResult(baseResult)
+          : baseResult;
+      },
+    );
 
     const { result } = renderHook(() => useSelectedTasks("all"));
-    expect(result.current.data).toBeUndefined();
+    expect(result.current.data).toEqual({
+      items: [],
+      count: 0,
+      activeCount: 0,
+      completeCount: 0,
+      visibleActiveIDs: [],
+      visibleCompletedIDs: [],
+    });
   });
 
   it("should return all tasks when filter is 'all'", async () => {
     const { todoApi } = await import("@/api/todo-api");
-    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: mockTasks,
-      error: undefined,
-      isLoading: false,
-      isFetching: false,
-      refetch: vi.fn(),
-    });
+    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockImplementation(
+      (_arg, options) => {
+        const baseResult = {
+          data: mockTasks,
+          error: undefined,
+          isLoading: false,
+          isFetching: false,
+          refetch: vi.fn(),
+        };
+        return options?.selectFromResult
+          ? options.selectFromResult(baseResult)
+          : baseResult;
+      },
+    );
 
     const { result } = renderHook(() => useSelectedTasks("all"));
-    expect(result.current.data).toEqual(mockTasks);
-    expect(result.current.data?.length).toBe(4);
+    expect(result.current.data.items).toEqual(mockTasks);
+    expect(result.current.data.count).toBe(4);
+    expect(result.current.data.activeCount).toBe(2);
+    expect(result.current.data.completeCount).toBe(2);
   });
 
   it("should return only active tasks when filter is 'active'", async () => {
@@ -94,10 +117,15 @@ describe("useSelectedTasks", () => {
     );
 
     const { result } = renderHook(() => useSelectedTasks("active"));
-    expect(result.current.data?.length).toBe(2);
-    expect(result.current.data?.[0].text).toBe("Active task 1");
-    expect(result.current.data?.[1].text).toBe("Active task 2");
-    expect(result.current.data?.every((task) => !task.completed)).toBe(true);
+    expect(result.current.data.items.length).toBe(2);
+    expect(result.current.data.items[0].text).toBe("Active task 1");
+    expect(result.current.data.items[1].text).toBe("Active task 2");
+    expect(result.current.data.items.every((task) => !task.completed)).toBe(
+      true,
+    );
+    expect(result.current.data.count).toBe(4);
+    expect(result.current.data.activeCount).toBe(2);
+    expect(result.current.data.completeCount).toBe(2);
   });
 
   it("should return only completed tasks when filter is 'completed'", async () => {
@@ -118,10 +146,15 @@ describe("useSelectedTasks", () => {
     );
 
     const { result } = renderHook(() => useSelectedTasks("completed"));
-    expect(result.current.data?.length).toBe(2);
-    expect(result.current.data?.[0].text).toBe("Completed task 1");
-    expect(result.current.data?.[1].text).toBe("Completed task 2");
-    expect(result.current.data?.every((task) => task.completed)).toBe(true);
+    expect(result.current.data.items.length).toBe(2);
+    expect(result.current.data.items[0].text).toBe("Completed task 1");
+    expect(result.current.data.items[1].text).toBe("Completed task 2");
+    expect(result.current.data.items.every((task) => task.completed)).toBe(
+      true,
+    );
+    expect(result.current.data.count).toBe(4);
+    expect(result.current.data.activeCount).toBe(2);
+    expect(result.current.data.completeCount).toBe(2);
   });
 
   it("should return empty array when no tasks match filter", async () => {
@@ -152,23 +185,36 @@ describe("useSelectedTasks", () => {
     );
 
     const { result } = renderHook(() => useSelectedTasks("completed"));
-    expect(result.current.data).toEqual([]);
-    expect(result.current.data?.length).toBe(0);
+    expect(result.current.data.items).toEqual([]);
+    expect(result.current.data.items.length).toBe(0);
+    expect(result.current.data.count).toBe(1);
+    expect(result.current.data.activeCount).toBe(1);
+    expect(result.current.data.completeCount).toBe(0);
   });
 
   it("should return empty array when tasks is empty", async () => {
     const { todoApi } = await import("@/api/todo-api");
-    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: [],
-      error: undefined,
-      isLoading: false,
-      isFetching: false,
-      refetch: vi.fn(),
-    });
+    (todoApi.useGetTasksQuery as ReturnType<typeof vi.fn>).mockImplementation(
+      (_arg, options) => {
+        const baseResult = {
+          data: [],
+          error: undefined,
+          isLoading: false,
+          isFetching: false,
+          refetch: vi.fn(),
+        };
+        return options?.selectFromResult
+          ? options.selectFromResult(baseResult)
+          : baseResult;
+      },
+    );
 
     const { result } = renderHook(() => useSelectedTasks("all"));
-    expect(result.current.data).toEqual([]);
-    expect(result.current.data?.length).toBe(0);
+    expect(result.current.data.items).toEqual([]);
+    expect(result.current.data.items.length).toBe(0);
+    expect(result.current.data.count).toBe(0);
+    expect(result.current.data.activeCount).toBe(0);
+    expect(result.current.data.completeCount).toBe(0);
   });
 
   it("should pass through error from API", async () => {

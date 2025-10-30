@@ -1,17 +1,41 @@
-import { useDispatch, useSelector } from "react-redux";
+import type { PropsWithChildren } from "react";
+import { useDispatch } from "react-redux";
 
 import { Option, Schema } from "effect";
 
 import { TaskItem } from "@/components/task-item";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
+import type { DataWithAggregations } from "@/hooks/use-selected-tasks";
 import { cn } from "@/lib/utils";
-import { FilterSchema } from "@/schemas/model";
-import type { State } from "@/store/store";
+import { type Filter, FilterSchema } from "@/schemas/model";
 import { userStateSlice } from "@/store/user-state-slice";
 
-export const TasksFilter = () => {
-  const value = useSelector((state: State) => state.userState.filter);
+const ToggleGroupItemLabel = ({
+  children,
+  count,
+}: PropsWithChildren<Pick<DataWithAggregations, "count">>) => {
+  return (
+    <>
+      {children} ({count})
+    </>
+  );
+};
+
+interface Props
+  extends Pick<
+    DataWithAggregations,
+    "count" | "activeCount" | "completeCount"
+  > {
+  filter: Filter;
+}
+
+export const TasksFilter = ({
+  count,
+  activeCount,
+  completeCount,
+  filter,
+}: Props) => {
   const dispatch = useDispatch();
 
   const onChange = (value: string) => {
@@ -24,11 +48,10 @@ export const TasksFilter = () => {
 
   return (
     <TaskItem
-      variant="muted"
       className={cn(
         "fixed bottom-0 left-0 right-0 px-2 justify-center bg-card",
         "md:static md:bottom-auto md:left-auto md:right-auto md:px-2",
-        "md:justify-start md:bg-muted",
+        "md:justify-start md:bg-transparent",
       )}
     >
       <fieldset className="flex flex-row gap-2 items-center">
@@ -39,23 +62,27 @@ export const TasksFilter = () => {
           type="single"
           variant="outline"
           size="lg"
-          value={value}
+          value={filter}
           onValueChange={onChange}
         >
           <ToggleGroupItem value="all" className="bg-card min-w-27 md:min-w-16">
-            All
+            <ToggleGroupItemLabel count={count}>All</ToggleGroupItemLabel>
           </ToggleGroupItem>
           <ToggleGroupItem
             value="active"
             className="bg-card min-w-27 md:min-w-16"
           >
-            Active
+            <ToggleGroupItemLabel count={activeCount}>
+              Active
+            </ToggleGroupItemLabel>
           </ToggleGroupItem>
           <ToggleGroupItem
             value="completed"
             className="bg-card min-w-27 md:min-w-16"
           >
-            Completed
+            <ToggleGroupItemLabel count={completeCount}>
+              Completed
+            </ToggleGroupItemLabel>
           </ToggleGroupItem>
         </ToggleGroup>
       </fieldset>
