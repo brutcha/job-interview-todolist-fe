@@ -37,12 +37,13 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Prepare pnpm
-        run: corepack prepare pnpm@10.19.0 --activate
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.19.0
+          run_install: false
 
       - name: Install dependencies
         run: pnpm install
