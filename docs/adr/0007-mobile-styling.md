@@ -139,33 +139,6 @@ Development Flow:
 - ⚪ Can fall back to Tailwind v3 if v4 issues
 - ⚪ CSS Modules backup if Tailwind rejected
 
-### Mobile Optimizations
-
-**Prevent iOS zoom on input focus:**
-
-```typescript
-// Use font-size >= 16px on inputs
-<Input className="text-base" /> // 16px minimum
-```
-
-**No hover states on mobile:**
-
-```typescript
-<Button className="
-  active:scale-95         // Touch feedback
-  lg:hover:bg-gray-100    // Hover only on desktop
-">
-```
-
-**Safe areas for iOS notch:**
-
-```css
-body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-```
-
 ## Accessibility
 
 **WCAG 2.1 Level AA Compliance (via shadcn/ui):**
