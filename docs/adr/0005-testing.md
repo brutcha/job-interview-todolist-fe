@@ -130,33 +130,6 @@ addFilterToUrl("http://localhost/", "active");
 - ⚪ Can add E2E tests later if needed
 - ⚪ Pure function approach limits testing complexity
 
-## Implementation Notes
-
-### CI Integration
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - run: pnpm install
-      - run: pnpm test:coverage
-      - run: pnpm typecheck
-      - run: pnpm lint
-```
-
 ## Test Philosophy
 
 ### What to Test
@@ -222,7 +195,7 @@ describe("addFilterToUrl", () => {
 
 ```typescript
 // e2e/todo-flow.spec.ts
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test("complete todo flow", async ({ page }) => {
   await page.goto("/");
@@ -249,8 +222,7 @@ test("complete todo flow", async ({ page }) => {
 // Note: Requires Docker for cross-platform rendering consistency
 // Browser rendering differs between OS (antialiasing, fonts, etc.)
 // Priority: P3 (not worth Docker complexity for MVP)
-
-import { test, expect } from "@vitest/browser";
+import { expect, test } from "@vitest/browser";
 
 test("button renders correctly", async () => {
   const screenshot = await page.screenshot();

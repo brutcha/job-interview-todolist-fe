@@ -131,19 +131,6 @@ Deploys automatically on push to `main`.
 
 **Live Demo:** `https://brutcha.github.io/job-interview-todolist-fe/`
 
-**Setup:**
-
-1. Enable GitHub Pages (Source: GitHub Actions)
-2. Add repository secret: `VITE_API_BASE_URL`
-3. Configure Vite base path: `/job-interview-todolist-fe/`
-
-**Benefits:**
-
-- ✅ Reviewers test without local setup
-- ✅ Automated deployment (zero manual steps)
-- ✅ Free hosting
-- ✅ Production build verification
-
 **Limitations:**
 
 - Requires public backend API (not `localhost:8080`)
